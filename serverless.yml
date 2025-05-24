@@ -1,4 +1,4 @@
-service: invest-tracker-api-${opt:stage, 'dev'}
+service: invest-tracker-api
 # app and org for use with dashboard.serverless.com
 app: invest-tracker
 #org: silas-stoffel
@@ -9,7 +9,7 @@ frameworkVersion: '3'
 
 provider:
   name: aws
-  runtime: go1.x
+  runtime: provided.al2023
 
 # you can overwrite defaults here
   stage: ${opt:stage, 'dev'}
