@@ -5,11 +5,12 @@ app: invest-tracker
 
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
-frameworkVersion: '3'
+frameworkVersion: '^3.39.0'
 
 provider:
   name: aws
   runtime: provided.al2023
+  architecture: x86_64
 
 # you can overwrite defaults here
   stage: ${opt:stage, 'dev'}
@@ -38,14 +39,17 @@ provider:
 #    variable1: value1
 
 package:
+  individually: true
   patterns:
     - '!./**'
     - ./bin/**
 
 functions:
   create-investment:
-    handler: bin/cmd/create-investment
+    handler: bin/bootstrap
     name: create-investment-${opt:stage, 'dev'}
+    package:
+      artifact: ./bin/create-investment.zip
     events:
       - http:
           path: /investments
