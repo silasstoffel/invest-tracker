@@ -1,0 +1,21 @@
+{
+  "name": "invest-track",
+  "version": "1.0.0",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/silasstoffel/invest-tracker.git"
+  },
+  "keywords": [],
+  "author": "Silas Stoffel <silasstofel@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/silasstoffel/invest-tracker/issues"
+  },
+  "homepage": "https://github.com/silasstoffel/invest-tracker#readme",
+  "description": "serverless framework automation",
+  "devDependencies": {
+    "serverless": "^4.15.0",
+    "serverless-offline": "^14.4.0"
+  }
+}

@@ -6,16 +6,21 @@ build: gomodgen
 	cd ./bin && zip create-investment.zip bootstrap
 
 clean:
-	rm -rf ./bin ./vendor go.sum
+#	rm -rf ./bin ./vendor go.sum
+	go clean
+	rm -rf ./bin
 
-deploy: deploy
-	sls deploy --stage dev --verbose
+deploy: clean build
+	npx sls deploy --stage dev --verbose
 
-deploy-dev: deploy
-	sls deploy --stage dev --verbose
+deploy-dev: clean build
+	npx sls deploy --stage dev --verbose
 
-remove-dev: deploy
-	sls remove --stage dev --verbose	
+remove-dev: clean build
+	npx sls remove --stage dev --verbose	
+
+dev: clean build 
+	npx serverless offline --useDocker --host 0.0.0.0
 
 gomodgen:
 	chmod u+x gomod.sh

@@ -1,5 +1,6 @@
 # Serverless directories
 .serverless
+.serverless-offline
 
 # golang output binary directory
 bin
@@ -21,5 +22,6 @@ vendor
 *.out
 
 #custom
+node_modules
 .env
 draft.txt
