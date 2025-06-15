@@ -1,13 +1,13 @@
-package investment
+package investment_core
 
 import "time"
 
 const (
 	// investiment types
-	FiiInvestmentType   = "FII"
-	StockInvestmentType = "STOCK"
-	ReitsInvestmentType = "REITS"
-	BondInvestmentType  = "BOND"
+	FiiInvestmentType   = "fii"
+	StockInvestmentType = "stock"
+	ReitInvestmentType  = "reit"
+	BondInvestmentType  = "bond"
 
 	// operation types
 	BuyOperationType  = "buy"
@@ -45,4 +45,6 @@ type CreateInvestmentInput struct {
 	DueDate        time.Time `json:"dueDate"`
 }
 
-type CreateInvestmentOutput struct{}
+type CreateInvestmentOutput struct {
+	Message string `json:"message"`
+}
