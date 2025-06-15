@@ -2,8 +2,8 @@
 
 build: gomodgen
 	export GO111MODULE=on
-	env GOARCH=amd64 GOOS=linux go build -tags lambda.norpc -ldflags="-s -w" -o bin/bootstrap apps/investments/create.go
-	cd ./bin && zip create-investment.zip bootstrap
+	env GOARCH=amd64 GOOS=linux go build -tags lambda.norpc -ldflags="-s -w" -o bin/bootstrap apps/investments/schedule/main.go
+	cd ./bin && zip schedule-investment.zip bootstrap
 
 clean:
 #	rm -rf ./bin ./vendor go.sum

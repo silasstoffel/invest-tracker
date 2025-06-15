@@ -29,17 +29,9 @@ provider:
 #      statements:
 #        - Effect: "Allow"
 #          Action:
-#            - "s3:ListBucket"
-#          Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "ServerlessDeploymentBucket" } ] ]  }
-#        - Effect: "Allow"
-#          Action:
-#            - "s3:PutObject"
+#            - "sqs:SendMessage"
 #          Resource:
-#            Fn::Join:
-#              - ""
-#              - - "arn:aws:s3:::"
-#                - "Ref" : "ServerlessDeploymentBucket"
-#                - "/*"
+#            - Fn::GetAtt: [createInvestmentQueue, Arn]
 
 # you can define service wide environment variables here
 #  environment:
@@ -51,13 +43,55 @@ package:
     - '!./**'
     - ./bin/**
 
+resources:
+  Resources:
+
+    createInvestmentQueueDQL:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: create-investment-${opt:stage, 'dev'}-dlq
+
+    createInvestmentQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: create-investment-${opt:stage, 'dev'}
+        RedrivePolicy:
+          deadLetterTargetArn:
+            Fn::GetAtt: [createInvestmentQueueDQL, Arn]
+          maxReceiveCount: 3
+
+    scheduleInvestmentLambdaRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: lambda.amazonaws.com
+              Action: sts:AssumeRole
+        Policies:
+          - PolicyName: ScheduleInvestmentPolicy
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - sqs:SendMessage
+                  Resource:
+                    - Fn::GetAtt: [createInvestmentQueue, Arn]
+
 functions:
-  create-investment:
+  schedule-investment:
+    role: scheduleInvestmentLambdaRole
     handler: bin/bootstrap
-    name: create-investment-${opt:stage, 'dev'}
+    name: schedule-investment-${opt:stage, 'dev'}
+    environment:
+      MONGO_URL: the-mongo-url-${opt:stage, 'dev'}
+      CREATE_INVESTMENT_QUEUE_URL: https://sqs.us-east-1.amazonaws.com/${aws:accountId}/create-investment-${opt:stage, 'dev'}
     package:
-      artifact: ./bin/create-investment.zip
+      artifact: ./bin/schedule-investment.zip
     events:
       - http:
-          path: /investments
+          path: /investments/schedule
           method: post
