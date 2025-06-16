@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -35,6 +36,59 @@ func init() {
 	queueURL = os.Getenv("CREATE_INVESTMENT_QUEUE_URL")
 }
 
+func checkInvestmentType(t string) error {
+	switch t {
+	case investment_core.FiiInvestmentType, investment_core.StockInvestmentType, investment_core.ReitInvestmentType, investment_core.BondInvestmentType:
+		return nil
+	case "":
+		return errors.New("investment type is required")
+	default:
+		return errors.New("invalid investment type")
+	}
+}
+
+func checkOperationType(t string) error {
+	switch t {
+	case investment_core.BuyOperationType, investment_core.SellOperationType:
+		return nil
+	case "":
+		return errors.New("operation type is required")
+	default:
+		return errors.New("invalid operation type")
+	}
+}
+
+func validateInput(input investment_core.CreateInvestmentInput) error {
+	investmentTypeError := checkInvestmentType(input.Type)
+	if investmentTypeError != nil {
+		return investmentTypeError
+	}
+	if input.Symbol == "" {
+		return fmt.Errorf("investment symbol is required")
+	}
+	if input.Quantity <= 0 {
+		return fmt.Errorf("investment quantity must be greater than zero")
+	}
+	if input.TotalValue <= 0 {
+		return fmt.Errorf("investment total value must be greater than zero")
+	}
+	if input.Cost < 0 {
+		return fmt.Errorf("investment cost cannot be negative")
+	}
+	checkOperationTypeErr := checkOperationType(input.OperationType)
+	if checkOperationTypeErr != nil {
+		return checkOperationTypeErr
+	}
+	if input.OperationDate.IsZero() {
+		return fmt.Errorf("operation date is required")
+	}
+	if input.DueDate.IsZero() {
+		return fmt.Errorf("due date is required")
+	}
+
+	return nil
+}
+
 func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (Response, error) {
 	var input investment_core.CreateInvestmentInput
 	err := json.Unmarshal([]byte(request.Body), &input)
@@ -53,6 +107,21 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (Respon
 			Headers:    responseHeaders,
 			Body:       string(respBody),
 		}, fmt.Errorf("%s: %w", message, err)
+	}
+
+	validateInputErr := validateInput(input)
+	if validateInputErr != nil {
+		message := validateInputErr.Error()
+		respBody, _ := json.Marshal(map[string]string{
+			"message": message,
+			"code":    "INVALID_REQUEST",
+		})
+		log.Printf("%s: %v", message, validateInputErr)
+		return Response{
+			StatusCode: 400,
+			Headers:    responseHeaders,
+			Body:       string(respBody),
+		}, fmt.Errorf("%s: %w", message, validateInputErr)
 	}
 
 	messageContent, err := json.Marshal(input)
