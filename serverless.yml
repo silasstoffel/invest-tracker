@@ -23,8 +23,7 @@ provider:
   stage: ${opt:stage, 'dev'}
   region: us-east-1
 
-  logs:
-    retentionInDays: 1
+  logRetentionInDays: 1
 
 # you can add statements to the Lambda function's IAM Role here
 #  iam:
@@ -92,6 +91,7 @@ resources:
 
 functions:
   schedule-investment:
+    description: "Lambda function to schedule investments"
     role: scheduleInvestmentLambdaRole
     handler: bin/bootstrap
     name: schedule-investment-${opt:stage, 'dev'}
