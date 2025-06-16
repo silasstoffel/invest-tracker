@@ -82,8 +82,14 @@ func validateInput(input investment_core.CreateInvestmentInput) error {
 	if input.OperationDate.IsZero() {
 		return fmt.Errorf("operation date is required")
 	}
-	if input.DueDate.IsZero() {
-		return fmt.Errorf("due date is required")
+
+	if input.Type == investment_core.BondInvestmentType {
+		if input.BondDetail.Index == "" {
+			return fmt.Errorf("bond index is required for bond investments")
+		}
+		if (input.BondDetail.Index == investment_core.BondIndexIPCA || input.BondDetail.Index == investment_core.BondIndexPrefix) && input.BondDetail.Rate < 0 {
+			return fmt.Errorf("bond rate must be greater than zero")
+		}
 	}
 
 	return nil
