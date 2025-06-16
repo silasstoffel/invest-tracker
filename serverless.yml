@@ -80,12 +80,19 @@ resources:
                     - sqs:SendMessage
                   Resource:
                     - Fn::GetAtt: [createInvestmentQueue, Arn]
+                - Effect: Allow
+                  Action:
+                    - logs:CreateLogGroup
+                    - logs:CreateLogStream
+                    - logs:PutLogEvents
+                  Resource: "*"
 
 functions:
   schedule-investment:
     role: scheduleInvestmentLambdaRole
     handler: bin/bootstrap
     name: schedule-investment-${opt:stage, 'dev'}
+    memorySize: 128	
     environment:
       MONGO_URL: the-mongo-url-${opt:stage, 'dev'}
       CREATE_INVESTMENT_QUEUE_URL: https://sqs.us-east-1.amazonaws.com/${aws:accountId}/create-investment-${opt:stage, 'dev'}

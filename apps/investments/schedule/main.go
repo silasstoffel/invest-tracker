@@ -106,7 +106,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (Respon
 			StatusCode: 400,
 			Headers:    responseHeaders,
 			Body:       string(respBody),
-		}, fmt.Errorf("%s: %w", message, err)
+		}, nil
 	}
 
 	validateInputErr := validateInput(input)
@@ -121,7 +121,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (Respon
 			StatusCode: 400,
 			Headers:    responseHeaders,
 			Body:       string(respBody),
-		}, fmt.Errorf("%s: %w", message, validateInputErr)
+		}, nil
 	}
 
 	messageContent, err := json.Marshal(input)
@@ -138,7 +138,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (Respon
 			StatusCode: 400,
 			Headers:    responseHeaders,
 			Body:       string(respBody),
-		}, fmt.Errorf("%s: %w", message, err)
+		}, nil
 	}
 
 	_, err = sqsClient.SendMessage(ctx, &sqs.SendMessageInput{
@@ -156,7 +156,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (Respon
 			StatusCode: 400,
 			Headers:    responseHeaders,
 			Body:       string(respBody),
-		}, fmt.Errorf("%s: %w", message, err)
+		}, nil
 	}
 
 	response, _ := json.Marshal(map[string]string{
