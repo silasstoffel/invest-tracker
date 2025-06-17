@@ -89,6 +89,35 @@ resources:
                     - logs:PutLogEvents
                   Resource: "*"
 
+    createInvestmentLambdaRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: lambda.amazonaws.com
+              Action: sts:AssumeRole
+        Policies:
+          - PolicyName: CreateInvestmentLambdaPolicy
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - sqs:ReceiveMessage
+                    - sqs:DeleteMessage
+                    - sqs:GetQueueAttributes
+                  Resource:
+                    - Fn::GetAtt: [createInvestmentQueue, Arn]
+                - Effect: Allow
+                  Action:
+                    - logs:CreateLogGroup
+                    - logs:CreateLogStream
+                    - logs:PutLogEvents
+                  Resource: "*"
+
 functions:
   schedule-investment:
     description: "Lambda function to schedule investments"
@@ -97,7 +126,6 @@ functions:
     name: schedule-investment-${opt:stage, 'dev'}
     memorySize: 128	
     environment:
-      MONGO_URL: the-mongo-url-${opt:stage, 'dev'}
       CREATE_INVESTMENT_QUEUE_URL: https://sqs.us-east-1.amazonaws.com/${aws:accountId}/create-investment-${opt:stage, 'dev'}
     package:
       artifact: ./bin/schedule-investment.zip
@@ -105,3 +133,23 @@ functions:
       - http:
           path: /investments/schedule
           method: post
+
+  create-investment:
+    description: "Lambda function to create investments"
+    role: createInvestmentLambdaRole
+    handler: bin/bootstrap
+    name: create-investment-${opt:stage, 'dev'}
+    memorySize: 256
+    timeout: 60
+    environment:
+      MONGO_URL: the-mongo-url-${opt:stage, 'dev'}
+    package: 
+      artifact: ./bin/create-investment.zip
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - createInvestmentQueue
+              - Arn
+          batchSize: 10
+          maximumBatchingWindow: 5
