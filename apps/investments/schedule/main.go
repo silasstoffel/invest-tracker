@@ -84,10 +84,10 @@ func validateInput(input investment_core.CreateInvestmentInput) error {
 	}
 
 	if input.Type == investment_core.BondInvestmentType {
-		if input.BondDetail.Index == "" {
+		if input.BondIndex == "" {
 			return fmt.Errorf("bond index is required for bond investments")
 		}
-		if (input.BondDetail.Index == investment_core.BondIndexIPCA || input.BondDetail.Index == investment_core.BondIndexPrefix) && input.BondDetail.Rate < 0 {
+		if (input.BondIndex == investment_core.BondIndexIPCA || input.BondIndex == investment_core.BondIndexPrefix) && input.BondRate < 0 {
 			return fmt.Errorf("bond rate must be greater than zero")
 		}
 	}
