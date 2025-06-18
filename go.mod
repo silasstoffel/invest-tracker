@@ -7,7 +7,6 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.36.4
 	github.com/aws/aws-sdk-go-v2/config v1.29.16
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.38.7
-	go.mongodb.org/mongo-driver v1.17.4
 )
 
 require (
