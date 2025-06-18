@@ -142,7 +142,11 @@ functions:
     memorySize: 256
     timeout: 60
     environment:
-      MONGO_URL: the-mongo-url-${opt:stage, 'dev'}
+      ENVIRONMENT: ${opt:stage, 'dev'}
+      CLOUDFLARE_ACCOUNT_ID_DEV: b3262b1ed9d85abab8621e13d0aba2aa
+      CLOUDFLARE_ACCOUNT_ID_PROD: waiting-for-prod
+      CLOUDFLARE_DB_ID_DEV: e256f11a-1b2e-4add-bcec-36697eb80eec
+      CLOUDFLARE_DB_ID_PROD: waiting-for-prod
     package: 
       artifact: ./bin/create-investment.zip
     events:
