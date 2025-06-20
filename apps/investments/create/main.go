@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"os"
 	"strings"
 	"time"
 
@@ -21,13 +20,16 @@ import (
 	"github.com/cloudflare/cloudflare-go/v4/option"
 	"github.com/oklog/ulid/v2"
 	investment_core "github.com/silasstoffel/invest-tracker/apps/investments/core"
+	appConfig "github.com/silasstoffel/invest-tracker/config"
 )
 
 var (
 	cfClient *cloudflare.Client
+	env      *appConfig.Config
 )
 
 func init() {
+	env = appConfig.NewConfigFromEnvVars()
 	ctx := context.Background()
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
@@ -35,13 +37,9 @@ func init() {
 		log.Println(m)
 		panic(m)
 	}
-	paramName := "/invest-track-dev/cloudflare/api-key"
-	if os.Getenv("AAA") == "prod" {
-		paramName = "/invest-track-prod/cloudflare/api-key"
-	}
 	ssmClient := ssm.NewFromConfig(cfg)
 	ssmOutput, err := ssmClient.GetParameter(ctx, &ssm.GetParameterInput{
-		Name:           &paramName,
+		Name:           &env.Cloudflare.ApiKeyParamName,
 		WithDecryption: aws.Bool(true),
 	})
 
@@ -97,9 +95,9 @@ func saveInvestment(entity investment_core.InvestmentEntity) error {
 
 	_, err := cfClient.D1.Database.Raw(
 		context.TODO(),
-		os.Getenv("CLOUDFLARE_DB_ID_DEV"),
+		env.Cloudflare.InvestmentTrackDbId,
 		d1.DatabaseRawParams{
-			AccountID: cloudflare.F(os.Getenv("CLOUDFLARE_ACCOUNT_ID_DEV")),
+			AccountID: cloudflare.F(env.Cloudflare.AccountId),
 			Sql:       cloudflare.F(command),
 			Params:    cloudflare.F(params),
 		},

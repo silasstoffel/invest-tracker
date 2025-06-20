@@ -6,12 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"os"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	investment_core "github.com/silasstoffel/invest-tracker/apps/investments/core"
+	appConfig "github.com/silasstoffel/invest-tracker/config"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -34,7 +34,8 @@ func init() {
 		panic(fmt.Sprintf("Failure to load aws config: %v", err))
 	}
 	sqsClient = sqs.NewFromConfig(cfg)
-	queueURL = os.Getenv("CREATE_INVESTMENT_QUEUE_URL")
+	config := appConfig.NewConfigFromEnvVars()
+	queueURL = config.CreateInvestmentQueueURL
 }
 
 func checkInvestmentType(t string) error {
