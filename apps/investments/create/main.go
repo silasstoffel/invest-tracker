@@ -86,7 +86,7 @@ func saveInvestment(entity investment_core.InvestmentEntity) error {
 
 	if entity.BondIndex != "" {
 		command = strings.Replace(command, "{add_column_name}", ", bond_index, bond_rate", 1)
-		command = strings.Replace(command, "{add_column_value}", ",?,?", 1)
+		command = strings.Replace(command, "{add_column_value_fake}", ",?,?", 1)
 		params = append(params, entity.BondIndex, fmt.Sprintf("%v", entity.BondRate))
 	} else {
 		command = strings.Replace(command, "{add_column_name}", "", 1)
@@ -153,14 +153,14 @@ func createInvestment(input string) error {
 
 }
 
-func Handler(ctx context.Context, sqsEvent events.SQSEvent) (map[string]interface{}, error) {
-	batchItemFailures := []map[string]interface{}{}
+func Handler(ctx context.Context, sqsEvent events.SQSEvent) (events.SQSEventResponse, error) {
+	batchItemFailures := []events.SQSBatchItemFailure{}
 
 	for _, message := range sqsEvent.Records {
 
 		if message.Body == "" {
 			log.Printf("Message with ID %s is empty, skipping", message.MessageId)
-			batchItemFailures = append(batchItemFailures, map[string]interface{}{"itemIdentifier": message.MessageId})
+			batchItemFailures = append(batchItemFailures, events.SQSBatchItemFailure{ItemIdentifier: message.MessageId})
 			continue
 		}
 
@@ -169,16 +169,14 @@ func Handler(ctx context.Context, sqsEvent events.SQSEvent) (map[string]interfac
 		if err != nil {
 			log.Printf("Error processing message %s: %v", message.MessageId, err)
 			log.Printf("Received message: %s", message.Body)
-			batchItemFailures = append(batchItemFailures, map[string]interface{}{"itemIdentifier": message.MessageId})
+			batchItemFailures = append(batchItemFailures, events.SQSBatchItemFailure{ItemIdentifier: message.MessageId})
 			continue
 		}
 	}
 
-	sqsBatchResponse := map[string]interface{}{
-		"batchItemFailures": batchItemFailures,
-	}
-
-	return sqsBatchResponse, nil
+	return events.SQSEventResponse{
+		BatchItemFailures: batchItemFailures,
+	}, nil
 }
 
 func main() {

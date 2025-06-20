@@ -15,7 +15,7 @@ type CloudflareConfig struct {
 type Config struct {
 	Env                      string
 	CreateInvestmentQueueURL string
-	Cloudflare               *CloudflareConfig
+	Cloudflare               CloudflareConfig
 }
 
 func NewConfigFromEnvVars() *Config {
@@ -33,9 +33,9 @@ func NewConfigFromEnvVars() *Config {
 	return &Config{
 		Env:                      env,
 		CreateInvestmentQueueURL: os.Getenv("CREATE_INVESTMENT_QUEUE_URL"),
-		Cloudflare: &CloudflareConfig{
+		Cloudflare: CloudflareConfig{
 			AccountId:           os.Getenv(fmt.Sprintf("CLOUDFLARE_ACCOUNT_ID_%s", getEnvPrefix)),
-			InvestmentTrackDbId: os.Getenv(fmt.Sprintf("CLOUDFLARE_DB_ID_PROD_%s", getEnvPrefix)),
+			InvestmentTrackDbId: os.Getenv(fmt.Sprintf("CLOUDFLARE_DB_ID_%s", getEnvPrefix)),
 			ApiKeyParamName:     apiKeyParamName,
 		},
 	}

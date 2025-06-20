@@ -118,7 +118,13 @@ resources:
                   Action:
                     - ssm:GetParameter
                   Resource:
-                    - arn:aws:ssm:${aws:region}:${aws:accountId}:parameter/invest-track-${opt:stage}/cloudflare/*                  
+                    - arn:aws:ssm:${aws:region}:${aws:accountId}:parameter/invest-track-${opt:stage}/cloudflare/*
+                - Effect: Allow
+                  Action:
+                    - sqs:SendMessage
+                  Resource:
+                    - Fn::GetAtt: [createInvestmentQueueDQL, Arn]
+                    
 
 functions:
   schedule-investment:
