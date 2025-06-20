@@ -33,10 +33,7 @@ provider:
 #            - "sqs:SendMessage"
 #          Resource:
 #            - Fn::GetAtt: [createInvestmentQueue, Arn]
-
-# you can define service wide environment variables here
-environment:
-  ENVIRONMENT: ${opt:stage, 'dev'}
+  
 
 package:
   individually: true
@@ -131,6 +128,7 @@ functions:
     name: schedule-investment-${opt:stage, 'dev'}
     memorySize: 128	
     environment:
+      ENVIRONMENT: ${opt:stage, 'dev'}
       CREATE_INVESTMENT_QUEUE_URL: https://sqs.us-east-1.amazonaws.com/${aws:accountId}/create-investment-${opt:stage, 'dev'}
     package:
       artifact: ./bin/schedule-investment.zip
@@ -147,6 +145,7 @@ functions:
     memorySize: 256
     timeout: 60
     environment:
+      ENVIRONMENT: ${opt:stage, 'dev'}
       CLOUDFLARE_ACCOUNT_ID_DEV: b3262b1ed9d85abab8621e13d0aba2aa
       CLOUDFLARE_ACCOUNT_ID_PROD: waiting-for-prod
       CLOUDFLARE_DB_ID_DEV: e256f11a-1b2e-4add-bcec-36697eb80eec
