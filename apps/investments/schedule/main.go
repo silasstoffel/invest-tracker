@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -81,6 +82,12 @@ func validateInput(input investment_core.CreateInvestmentInput) error {
 	}
 	if input.OperationDate == "" {
 		return fmt.Errorf("operation date is required")
+	} else {
+		// Validate operation date format (YYYY-MM-DD)
+		date := strings.Trim(input.OperationDate, "")
+		if len(date) != 10 {
+			return fmt.Errorf("operation date must be in the format YYYY-MM-DD")
+		}
 	}
 
 	if input.Type == investment_core.BondInvestmentType {

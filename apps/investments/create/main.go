@@ -135,6 +135,7 @@ func Handler(ctx context.Context, sqsEvent events.SQSEvent) (map[string]interfac
 		if message.Body == "" {
 			log.Printf("Message with ID %s is empty, skipping", message.MessageId)
 			batchItemFailures = append(batchItemFailures, map[string]interface{}{"itemIdentifier": message.MessageId})
+			continue
 		}
 
 		err := createInvestment(message.Body)
