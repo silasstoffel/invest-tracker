@@ -79,7 +79,7 @@ func validateInput(input investment_core.CreateInvestmentInput) error {
 	if checkOperationTypeErr != nil {
 		return checkOperationTypeErr
 	}
-	if input.OperationDate.IsZero() {
+	if input.OperationDate == "" {
 		return fmt.Errorf("operation date is required")
 	}
 

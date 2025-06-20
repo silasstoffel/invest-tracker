@@ -32,25 +32,25 @@ type InvestmentEntity struct {
 	TotalValue     float64   `json:"totalValue"`
 	Cost           float64   `json:"cost"`
 	OperationType  string    `json:"operationType"`
-	OperationDate  time.Time `json:"operationDate"`
+	OperationDate  string    `json:"operationDate"`
 	OperationYear  int       `json:"operationYear"`
 	OperationMonth int       `json:"operationMonth"`
-	DueDate        time.Time `json:"dueDate"`
+	DueDate        string    `json:"dueDate"`
 	CreatedAt      time.Time `json:"createdAt"`
 	UpdatedAt      time.Time `json:"updatedAt"`
 }
 
 type CreateInvestmentInput struct {
-	Type          string    `json:"type"`
-	Symbol        string    `json:"symbol"`
-	BondIndex     string    `json:"bondIndex,omitempty"`
-	BondRate      float64   `json:"bondRate,omitempty"`
-	Quantity      int       `json:"quantity"`
-	TotalValue    float64   `json:"totalValue"`
-	Cost          float64   `json:"cost"`
-	OperationType string    `json:"operationType"`
-	OperationDate time.Time `json:"operationDate"`
-	DueDate       time.Time `json:"dueDate"`
+	Type          string  `json:"type"`
+	Symbol        string  `json:"symbol"`
+	BondIndex     string  `json:"bondIndex,omitempty"`
+	BondRate      float64 `json:"bondRate,omitempty"`
+	Quantity      int     `json:"quantity"`
+	TotalValue    float64 `json:"totalValue"`
+	Cost          float64 `json:"cost"`
+	OperationType string  `json:"operationType"`
+	OperationDate string  `json:"operationDate"`
+	DueDate       string  `json:"dueDate"`
 }
 
 type CreateInvestmentOutput struct {
