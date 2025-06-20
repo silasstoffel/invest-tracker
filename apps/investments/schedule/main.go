@@ -90,6 +90,14 @@ func validateInput(input investment_core.CreateInvestmentInput) error {
 		}
 	}
 
+	if input.DueDate != "" {
+		// Validate due date format (YYYY-MM-DD)
+		date := strings.Trim(input.DueDate, "")
+		if len(date) != 10 {
+			return fmt.Errorf("due date must be in the format YYYY-MM-DD")
+		}
+	}
+
 	if input.Type == investment_core.BondInvestmentType {
 		if input.BondIndex == "" {
 			return fmt.Errorf("bond index is required for bond investments")

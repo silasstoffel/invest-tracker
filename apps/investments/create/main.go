@@ -13,6 +13,9 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/cloudflare/cloudflare-go/v4"
 	"github.com/cloudflare/cloudflare-go/v4/d1"
 	"github.com/cloudflare/cloudflare-go/v4/option"
@@ -20,11 +23,36 @@ import (
 	investment_core "github.com/silasstoffel/invest-tracker/apps/investments/core"
 )
 
-var cfClient *cloudflare.Client
+var (
+	cfClient *cloudflare.Client
+)
 
 func init() {
+	ctx := context.Background()
+	cfg, err := config.LoadDefaultConfig(ctx)
+	if err != nil {
+		m := fmt.Sprintf("Failure to load aws config: %v", err)
+		log.Println(m)
+		panic(m)
+	}
+	paramName := "/invest-track-dev/cloudflare/api-key"
+	if os.Getenv("AAA") == "prod" {
+		paramName = "/invest-track-prod/cloudflare/api-key"
+	}
+	ssmClient := ssm.NewFromConfig(cfg)
+	ssmOutput, err := ssmClient.GetParameter(ctx, &ssm.GetParameterInput{
+		Name:           &paramName,
+		WithDecryption: aws.Bool(true),
+	})
+
+	if err != nil {
+		m := fmt.Sprintf("Failure to load data from parameter store: %v", err)
+		log.Println(m)
+		panic(m)
+	}
+
 	cfClient = cloudflare.NewClient(
-		option.WithAPIToken(os.Getenv("CLOUDFLARE_API_TOKEN_DEV")),
+		option.WithAPIToken(*ssmOutput.Parameter.Value),
 	)
 }
 

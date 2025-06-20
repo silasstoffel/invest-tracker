@@ -1,5 +1,4 @@
 service: invest-tracker-api
-# app and org for use with dashboard.serverless.com
 app: invest-tracker
 #org: silas-stoffel
 
@@ -36,8 +35,8 @@ provider:
 #            - Fn::GetAtt: [createInvestmentQueue, Arn]
 
 # you can define service wide environment variables here
-#  environment:
-#    variable1: value1
+environment:
+  ENVIRONMENT: ${opt:stage, 'dev'}
 
 package:
   individually: true
@@ -57,6 +56,7 @@ resources:
       Type: AWS::SQS::Queue
       Properties:
         QueueName: create-investment-${opt:stage, 'dev'}
+        VisibilityTimeout: 60
         RedrivePolicy:
           deadLetterTargetArn:
             Fn::GetAtt: [createInvestmentQueueDQL, Arn]
@@ -117,6 +117,11 @@ resources:
                     - logs:CreateLogStream
                     - logs:PutLogEvents
                   Resource: "*"
+                - Effect: Allow
+                  Action:
+                    - ssm:GetParameter
+                  Resource:
+                    - arn:aws:ssm:${aws:region}:${aws:accountId}:parameter/invest-track-${opt:stage}/cloudflare/*                  
 
 functions:
   schedule-investment:
@@ -142,7 +147,6 @@ functions:
     memorySize: 256
     timeout: 60
     environment:
-      ENVIRONMENT: ${opt:stage, 'dev'}
       CLOUDFLARE_ACCOUNT_ID_DEV: b3262b1ed9d85abab8621e13d0aba2aa
       CLOUDFLARE_ACCOUNT_ID_PROD: waiting-for-prod
       CLOUDFLARE_DB_ID_DEV: e256f11a-1b2e-4add-bcec-36697eb80eec
@@ -155,5 +159,5 @@ functions:
             Fn::GetAtt:
               - createInvestmentQueue
               - Arn
-          batchSize: 10
+          batchSize: 8
           maximumBatchingWindow: 5
