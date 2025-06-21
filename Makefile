@@ -13,8 +13,8 @@ clean:
 	go clean
 	rm -rf ./bin
 
-deploy: clean build
-	npx sls deploy --stage dev --verbose
+deploy-prod: clean build
+	npx sls deploy --stage prod --verbose
 
 deploy-dev: clean build
 	npx sls deploy --stage dev --verbose
