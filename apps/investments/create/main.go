@@ -65,7 +65,7 @@ func saveInvestment(entity investment_core.InvestmentEntity) error {
 	command := `INSERT INTO investments (
 		id, type, symbol, quantity, unit_price, total_value, cost, operation_type, operation_date,
 		operation_year, operation_month, due_date, created_at, updated_at, brokerage, note, redemption_policy_type {add_column_name}) VALUES (
-			?,?,?,?,?,?,?,?,?,?,?,?,?,?,?{add_column_value})`
+			?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?{add_column_value})`
 
 	params := []string{
 		entity.ID,
