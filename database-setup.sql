@@ -24,3 +24,5 @@ CREATE INDEX idx_investments_symbol ON investments(symbol);
 CREATE INDEX idx_investments_bond_index ON investments(bond_index);
 CREATE INDEX operation_year ON investments(operation_year);
 CREATE INDEX operation_month ON investments(operation_month);
+
+ALTER TABLE investments ADD COLUMN brokerage TEXT DEFAULT NULL;

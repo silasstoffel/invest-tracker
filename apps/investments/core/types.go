@@ -36,6 +36,7 @@ type InvestmentEntity struct {
 	OperationYear  int       `json:"operationYear"`
 	OperationMonth int       `json:"operationMonth"`
 	DueDate        string    `json:"dueDate"`
+	Brokerage      string    `json:"brokerage"`
 	CreatedAt      time.Time `json:"createdAt"`
 	UpdatedAt      time.Time `json:"updatedAt"`
 }
@@ -51,6 +52,7 @@ type CreateInvestmentInput struct {
 	OperationType string  `json:"operationType"`
 	OperationDate string  `json:"operationDate"`
 	DueDate       string  `json:"dueDate"`
+	Brokerage     string  `json:"brokerage"`
 }
 
 type CreateInvestmentOutput struct {
