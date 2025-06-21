@@ -53,7 +53,7 @@ resources:
       Type: AWS::SQS::Queue
       Properties:
         QueueName: create-investment-${opt:stage, 'dev'}
-        VisibilityTimeout: 60
+        VisibilityTimeout: 30
         RedrivePolicy:
           deadLetterTargetArn:
             Fn::GetAtt: [createInvestmentQueueDQL, Arn]
@@ -149,7 +149,7 @@ functions:
     handler: bin/bootstrap
     name: create-investment-${opt:stage, 'dev'}
     memorySize: 256
-    timeout: 60
+    timeout: 30
     environment:
       ENVIRONMENT: ${opt:stage, 'dev'}
       CLOUDFLARE_ACCOUNT_ID_DEV: b3262b1ed9d85abab8621e13d0aba2aa
@@ -164,5 +164,6 @@ functions:
             Fn::GetAtt:
               - createInvestmentQueue
               - Arn
-          batchSize: 8
+          batchSize: 5
           maximumBatchingWindow: 5
+          functionResponseType: ReportBatchItemFailures
