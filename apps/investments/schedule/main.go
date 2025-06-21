@@ -40,12 +40,21 @@ func init() {
 
 func checkInvestmentType(t string) error {
 	switch t {
-	case investment_core.FiiInvestmentType, investment_core.StockInvestmentType, investment_core.ReitInvestmentType, investment_core.BondInvestmentType:
+	case investment_core.FiiInvestmentType, investment_core.StockInvestmentType, investment_core.ReitInvestmentType, investment_core.BondInvestmentType, investment_core.EtfInvestmentType:
 		return nil
 	case "":
 		return errors.New("investment type is required")
 	default:
 		return errors.New("invalid investment type")
+	}
+}
+
+func checkRedemptionPolicyType(t string) error {
+	switch t {
+	case investment_core.AnyTimeRedemption, investment_core.AtMaturityRedemption, investment_core.HybridRedemption:
+		return nil
+	default:
+		return errors.New("invalid redemption policy type")
 	}
 }
 
@@ -105,6 +114,12 @@ func validateInput(input investment_core.CreateInvestmentInput) error {
 		}
 		if (input.BondIndex == investment_core.BondIndexIPCA || input.BondIndex == investment_core.BondIndexPrefix) && input.BondRate < 0 {
 			return fmt.Errorf("bond rate must be greater than zero")
+		}
+	}
+
+	if input.RedemptionPolicyType != "" {
+		if failure := checkRedemptionPolicyType(input.RedemptionPolicyType); failure != nil {
+			return failure
 		}
 	}
 

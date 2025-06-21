@@ -64,7 +64,7 @@ func createId() string {
 func saveInvestment(entity investment_core.InvestmentEntity) error {
 	command := `INSERT INTO investments (
 		id, type, symbol, quantity, unit_price, total_value, cost, operation_type, operation_date,
-		operation_year, operation_month, due_date, created_at, updated_at, brokerage {add_column_name}) VALUES (
+		operation_year, operation_month, due_date, created_at, updated_at, brokerage, note, redemption_policy_type {add_column_name}) VALUES (
 			?,?,?,?,?,?,?,?,?,?,?,?,?,?,?{add_column_value})`
 
 	params := []string{
@@ -83,6 +83,8 @@ func saveInvestment(entity investment_core.InvestmentEntity) error {
 		entity.CreatedAt.Format(time.RFC3339),
 		entity.UpdatedAt.Format(time.RFC3339),
 		entity.Brokerage,
+		entity.Note,
+		entity.RedemptionPolicyType,
 	}
 
 	if entity.BondIndex != "" {
@@ -125,23 +127,25 @@ func createInvestment(input string) error {
 
 	od, _ := time.Parse("2006-01-02", data.OperationDate)
 	entity := investment_core.InvestmentEntity{
-		ID:             createId(),
-		Type:           data.Type,
-		Symbol:         data.Symbol,
-		BondIndex:      data.BondIndex,
-		BondRate:       data.BondRate,
-		Quantity:       data.Quantity,
-		UnitPrice:      data.TotalValue / float64(data.Quantity),
-		TotalValue:     data.TotalValue,
-		Cost:           data.Cost,
-		OperationType:  data.OperationType,
-		OperationDate:  data.OperationDate,
-		OperationYear:  od.Year(),
-		OperationMonth: int(od.Month()),
-		DueDate:        data.DueDate,
-		Brokerage:      data.Brokerage,
-		CreatedAt:      time.Now().UTC(),
-		UpdatedAt:      time.Now().UTC(),
+		ID:                   createId(),
+		Type:                 data.Type,
+		Symbol:               data.Symbol,
+		BondIndex:            data.BondIndex,
+		BondRate:             data.BondRate,
+		Quantity:             data.Quantity,
+		UnitPrice:            data.TotalValue / float64(data.Quantity),
+		TotalValue:           data.TotalValue,
+		Cost:                 data.Cost,
+		OperationType:        data.OperationType,
+		OperationDate:        data.OperationDate,
+		OperationYear:        od.Year(),
+		OperationMonth:       int(od.Month()),
+		DueDate:              data.DueDate,
+		Brokerage:            data.Brokerage,
+		CreatedAt:            time.Now().UTC(),
+		UpdatedAt:            time.Now().UTC(),
+		RedemptionPolicyType: data.RedemptionPolicyType,
+		Note:                 data.Note,
 	}
 
 	err = saveInvestment(entity)

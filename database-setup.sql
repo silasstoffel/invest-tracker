@@ -26,3 +26,5 @@ CREATE INDEX operation_year ON investments(operation_year);
 CREATE INDEX operation_month ON investments(operation_month);
 
 ALTER TABLE investments ADD COLUMN brokerage TEXT DEFAULT NULL;
+ALTER TABLE investments ADD COLUMN note TEXT DEFAULT NULL;
+ALTER TABLE investments ADD COLUMN redemption_policy_type TEXT DEFAULT NULL;

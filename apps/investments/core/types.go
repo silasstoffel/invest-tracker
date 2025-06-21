@@ -10,6 +10,7 @@ const (
 	StockInvestmentType = "stock"
 	ReitInvestmentType  = "reit"
 	BondInvestmentType  = "bond"
+	EtfInvestmentType   = "etf"
 
 	// operation types
 	BuyOperationType  = "buy"
@@ -19,40 +20,48 @@ const (
 	BondIndexIPCA   = "ipca"
 	BondIndexSELIC  = "selic"
 	BondIndexPrefix = "prefixed"
+
+	HybridRedemption     = "hybrid"
+	AnyTimeRedemption    = "any_time"
+	AtMaturityRedemption = "at_maturity"
 )
 
 type InvestmentEntity struct {
-	ID             string    `json:"id"`
-	Type           string    `json:"type"`
-	Symbol         string    `json:"symbol"`
-	BondIndex      string    `json:"bondIndex,omitempty"`
-	BondRate       float64   `json:"bondRate,omitempty"`
-	Quantity       int       `json:"quantity"`
-	UnitPrice      float64   `json:"unitPrice"`
-	TotalValue     float64   `json:"totalValue"`
-	Cost           float64   `json:"cost"`
-	OperationType  string    `json:"operationType"`
-	OperationDate  string    `json:"operationDate"`
-	OperationYear  int       `json:"operationYear"`
-	OperationMonth int       `json:"operationMonth"`
-	DueDate        string    `json:"dueDate"`
-	Brokerage      string    `json:"brokerage"`
-	CreatedAt      time.Time `json:"createdAt"`
-	UpdatedAt      time.Time `json:"updatedAt"`
+	ID                   string    `json:"id"`
+	Type                 string    `json:"type"`
+	Symbol               string    `json:"symbol"`
+	BondIndex            string    `json:"bondIndex,omitempty"`
+	BondRate             float64   `json:"bondRate,omitempty"`
+	Quantity             int       `json:"quantity"`
+	UnitPrice            float64   `json:"unitPrice"`
+	TotalValue           float64   `json:"totalValue"`
+	Cost                 float64   `json:"cost"`
+	OperationType        string    `json:"operationType"`
+	OperationDate        string    `json:"operationDate"`
+	OperationYear        int       `json:"operationYear"`
+	OperationMonth       int       `json:"operationMonth"`
+	DueDate              string    `json:"dueDate"`
+	Brokerage            string    `json:"brokerage"`
+	Note                 string    `json:"note"`
+	RedemptionPolicyType string    `json:"redemptionPolicyType"`
+	CreatedAt            time.Time `json:"createdAt"`
+	UpdatedAt            time.Time `json:"updatedAt"`
 }
 
 type CreateInvestmentInput struct {
-	Type          string  `json:"type"`
-	Symbol        string  `json:"symbol"`
-	BondIndex     string  `json:"bondIndex,omitempty"`
-	BondRate      float64 `json:"bondRate,omitempty"`
-	Quantity      int     `json:"quantity"`
-	TotalValue    float64 `json:"totalValue"`
-	Cost          float64 `json:"cost"`
-	OperationType string  `json:"operationType"`
-	OperationDate string  `json:"operationDate"`
-	DueDate       string  `json:"dueDate"`
-	Brokerage     string  `json:"brokerage"`
+	Type                 string  `json:"type"`
+	Symbol               string  `json:"symbol"`
+	BondIndex            string  `json:"bondIndex,omitempty"`
+	BondRate             float64 `json:"bondRate,omitempty"`
+	Quantity             int     `json:"quantity"`
+	TotalValue           float64 `json:"totalValue"`
+	Cost                 float64 `json:"cost"`
+	OperationType        string  `json:"operationType"`
+	OperationDate        string  `json:"operationDate"`
+	DueDate              string  `json:"dueDate"`
+	Brokerage            string  `json:"brokerage"`
+	Note                 string  `json:"note"`
+	RedemptionPolicyType string  `json:"redemptionPolicyType"`
 }
 
 type CreateInvestmentOutput struct {
