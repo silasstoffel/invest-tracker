@@ -130,7 +130,7 @@ func createInvestment(input string) (investment_core.InvestmentEntity, error) {
 
 	if err != nil {
 		log.Println("Failure to convert json input to create investment input. Detail: ", input)
-		return nil, err
+		return investment_core.InvestmentEntity{}, err
 	}
 
 	od, _ := time.Parse("2006-01-02", data.OperationDate)
@@ -159,7 +159,7 @@ func createInvestment(input string) (investment_core.InvestmentEntity, error) {
 	err = saveInvestment(entity)
 	if err != nil {
 		log.Printf("Error saving investment: %v", err)
-		return nil, fmt.Errorf("error saving investment: %w", err)
+		return investment_core.InvestmentEntity{}, fmt.Errorf("error saving investment: %w", err)
 	}
 
 	log.Println("Investment created successfully. ID:", entity.ID, " Symbol:", entity.Symbol, " Type:", entity.Type, " Total Value:", entity.TotalValue)
@@ -186,9 +186,16 @@ func Handler(ctx context.Context, sqsEvent events.SQSEvent) (events.SQSEventResp
 			continue
 		}
 
+		messageContent, err := json.Marshal(entity)
+		if err != nil {
+			m := "Failure when converting entity message to json. Message was not sent to recalculate average price. Detail: %v"
+			log.Printf(m, err)
+			continue
+		}
+
 		_, err = sqsClient.SendMessage(ctx, &sqs.SendMessageInput{
 			QueueUrl:               aws.String(queueURL),
-			MessageBody:            aws.String(entity.Symbol),
+			MessageBody:            aws.String(string(messageContent)),
 			MessageDeduplicationId: aws.String(entity.ID),
 			MessageGroupId:         aws.String(entity.Symbol),
 		})
