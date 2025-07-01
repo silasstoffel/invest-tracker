@@ -59,6 +59,23 @@ resources:
             Fn::GetAtt: [createInvestmentQueueDQL, Arn]
           maxReceiveCount: 3
 
+    calculateAveragePriceQueueDQL:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: calculate-average-price-${opt:stage, 'dev'}-dlq.fifo
+        FifoQueue: true
+
+    calculateAveragePriceQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: calculate-average-price-${opt:stage, 'dev'}.fifo
+        FifoQueue: true
+        VisibilityTimeout: 90
+        RedrivePolicy:
+          deadLetterTargetArn:
+            Fn::GetAtt: [calculateAveragePriceQueueDQL, Arn]
+          maxReceiveCount: 10
+
     scheduleInvestmentLambdaRole:
       Type: AWS::IAM::Role
       Properties:
