@@ -141,6 +141,11 @@ resources:
                     - sqs:SendMessage
                   Resource:
                     - Fn::GetAtt: [createInvestmentQueueDQL, Arn]
+                - Effect: Allow
+                  Action:
+                    - sqs:SendMessage
+                  Resource:
+                    - Fn::GetAtt: [calculateAveragePriceQueue, Arn]                    
                     
 
 functions:
