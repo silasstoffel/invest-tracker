@@ -19,10 +19,11 @@ type CloudflareConfig struct {
 type Aws struct{}
 
 type Config struct {
-	Env                      string
-	CreateInvestmentQueueURL string
-	Cloudflare               CloudflareConfig
-	Aws                      *Aws
+	Env                           string
+	CreateInvestmentQueueURL      string
+	CalculateAveragePriceQueueURL string
+	Cloudflare                    CloudflareConfig
+	Aws                           *Aws
 }
 
 func NewConfigFromEnvVars() *Config {
@@ -38,8 +39,9 @@ func NewConfigFromEnvVars() *Config {
 	}
 
 	return &Config{
-		Env:                      env,
-		CreateInvestmentQueueURL: os.Getenv("CREATE_INVESTMENT_QUEUE_URL"),
+		Env:                           env,
+		CreateInvestmentQueueURL:      os.Getenv("CREATE_INVESTMENT_QUEUE_URL"),
+		CalculateAveragePriceQueueURL: os.Getenv("CALCULATE_AVERAGE_PRICE_QUEUE_URL"),
 		Cloudflare: CloudflareConfig{
 			AccountId:           os.Getenv(fmt.Sprintf("CLOUDFLARE_ACCOUNT_ID_%s", getEnvPrefix)),
 			InvestmentTrackDbId: os.Getenv(fmt.Sprintf("CLOUDFLARE_DB_ID_%s", getEnvPrefix)),

@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/cloudflare/cloudflare-go/v4"
 	"github.com/cloudflare/cloudflare-go/v4/d1"
@@ -24,8 +25,10 @@ import (
 )
 
 var (
-	cfClient *cloudflare.Client
-	env      *appConfig.Config
+	cfClient  *cloudflare.Client
+	env       *appConfig.Config
+	sqsClient *sqs.Client
+	queueURL  string
 )
 
 func init() {
@@ -52,6 +55,10 @@ func init() {
 	cfClient = cloudflare.NewClient(
 		option.WithAPIToken(*ssmOutput.Parameter.Value),
 	)
+
+	sqsClient = sqs.NewFromConfig(cfg)
+	config := appConfig.NewConfigFromEnvVars()
+	queueURL = config.CalculateAveragePriceQueueURL
 }
 
 func createId() string {
@@ -117,12 +124,13 @@ func saveInvestment(entity investment_core.InvestmentEntity) error {
 	return nil
 }
 
-func createInvestment(input string) error {
+func createInvestment(input string) (investment_core.InvestmentEntity, error) {
 	var data investment_core.CreateInvestmentInput
 	err := json.Unmarshal([]byte(input), &data)
 
 	if err != nil {
 		log.Println("Failure to convert json input to create investment input. Detail: ", input)
+		return nil, err
 	}
 
 	od, _ := time.Parse("2006-01-02", data.OperationDate)
@@ -151,12 +159,11 @@ func createInvestment(input string) error {
 	err = saveInvestment(entity)
 	if err != nil {
 		log.Printf("Error saving investment: %v", err)
-		return fmt.Errorf("error saving investment: %w", err)
+		return nil, fmt.Errorf("error saving investment: %w", err)
 	}
 
 	log.Println("Investment created successfully. ID:", entity.ID, " Symbol:", entity.Symbol, " Type:", entity.Type, " Total Value:", entity.TotalValue)
-	return nil
-
+	return entity, nil
 }
 
 func Handler(ctx context.Context, sqsEvent events.SQSEvent) (events.SQSEventResponse, error) {
@@ -170,13 +177,25 @@ func Handler(ctx context.Context, sqsEvent events.SQSEvent) (events.SQSEventResp
 			continue
 		}
 
-		err := createInvestment(message.Body)
+		entity, err := createInvestment(message.Body)
 
 		if err != nil {
 			log.Printf("Error processing message %s: %v", message.MessageId, err)
 			log.Printf("Received message: %s", message.Body)
 			batchItemFailures = append(batchItemFailures, events.SQSBatchItemFailure{ItemIdentifier: message.MessageId})
 			continue
+		}
+
+		_, err = sqsClient.SendMessage(ctx, &sqs.SendMessageInput{
+			QueueUrl:               aws.String(queueURL),
+			MessageBody:            aws.String(entity.Symbol),
+			MessageDeduplicationId: aws.String(entity.ID),
+			MessageGroupId:         aws.String(entity.Symbol),
+		})
+
+		if err != nil {
+			m := "Failure to send message to calculate-average-price-env-queue.fifo. Detail: %v"
+			log.Printf(m, err)
 		}
 	}
 
