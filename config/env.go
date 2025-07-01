@@ -1,9 +1,13 @@
 package config
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
 )
 
 type CloudflareConfig struct {
@@ -12,10 +16,13 @@ type CloudflareConfig struct {
 	ApiKeyParamName     string // Identifier to read API Key value
 }
 
+type Aws struct{}
+
 type Config struct {
 	Env                      string
 	CreateInvestmentQueueURL string
 	Cloudflare               CloudflareConfig
+	Aws                      *Aws
 }
 
 func NewConfigFromEnvVars() *Config {
@@ -38,5 +45,15 @@ func NewConfigFromEnvVars() *Config {
 			InvestmentTrackDbId: os.Getenv(fmt.Sprintf("CLOUDFLARE_DB_ID_%s", getEnvPrefix)),
 			ApiKeyParamName:     apiKeyParamName,
 		},
+		Aws: &Aws{},
 	}
+}
+
+func (a *Aws) LoadDefaultConfig() (aws.Config, error) {
+	ctx := context.Background()
+	cfg, err := config.LoadDefaultConfig(ctx)
+	if err != nil {
+		return aws.Config{}, fmt.Errorf("%s", fmt.Sprintf("Failure to load aws config: %v", err))
+	}
+	return cfg, nil
 }
