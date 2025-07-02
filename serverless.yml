@@ -146,7 +146,45 @@ resources:
                     - sqs:SendMessage
                   Resource:
                     - Fn::GetAtt: [calculateAveragePriceQueue, Arn]                    
-                    
+
+    calculateAveragePriceLambdaRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: lambda.amazonaws.com
+              Action: sts:AssumeRole
+        Policies:
+          - PolicyName: CalculateAveragePriceLambdaPolicy
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - sqs:ReceiveMessage
+                    - sqs:DeleteMessage
+                    - sqs:GetQueueAttributes
+                  Resource:
+                    - Fn::GetAtt: [calculateAveragePriceQueue, Arn]
+                - Effect: Allow
+                  Action:
+                    - logs:CreateLogGroup
+                    - logs:CreateLogStream
+                    - logs:PutLogEvents
+                  Resource: "*"
+                - Effect: Allow
+                  Action:
+                    - ssm:GetParameter
+                  Resource:
+                    - arn:aws:ssm:${aws:region}:${aws:accountId}:parameter/invest-track-${opt:stage}/cloudflare/*
+                - Effect: Allow
+                  Action:
+                    - sqs:SendMessage
+                  Resource:
+                    - Fn::GetAtt: [calculateAveragePriceQueueDQL, Arn]                     
 
 functions:
   schedule-investment:
@@ -186,6 +224,31 @@ functions:
           arn:
             Fn::GetAtt:
               - createInvestmentQueue
+              - Arn
+          batchSize: 5
+          maximumBatchingWindow: 5
+          functionResponseType: ReportBatchItemFailures
+
+  calculate-average-price:
+    description: "Lambda function to calculate average price"
+    role: calculateAveragePriceLambdaRole
+    handler: bin/bootstrap
+    name: calculate-average-price-${opt:stage, 'dev'}
+    memorySize: 256
+    timeout: 90
+    environment:
+      ENVIRONMENT: ${opt:stage, 'dev'}
+      CLOUDFLARE_ACCOUNT_ID_DEV: b3262b1ed9d85abab8621e13d0aba2aa
+      CLOUDFLARE_ACCOUNT_ID_PROD: 4bb3c96a08e81f83a23daa00259c7bb2
+      CLOUDFLARE_DB_ID_DEV: e256f11a-1b2e-4add-bcec-36697eb80eec
+      CLOUDFLARE_DB_ID_PROD: b3b7b94b-a93e-4a3c-ba0c-ae4567beb9d1
+    package: 
+      artifact: ./bin/calculate-average-price.zip
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - calculateAveragePriceQueue
               - Arn
           batchSize: 5
           maximumBatchingWindow: 5
