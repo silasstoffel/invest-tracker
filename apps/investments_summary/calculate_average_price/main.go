@@ -2,13 +2,23 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	investment_summary_core "github.com/silasstoffel/invest-tracker/apps/investments_summary/core"
 )
 
-func handleMessage() error {
+func handleMessage(msg string) error {
+	var data investment_summary_core.InvestmentCreatedInput
+	err := json.Unmarshal([]byte(msg), &data)
+
+	if err != nil {
+		log.Printf("Failure to convert JSON to struct")
+		return err
+	}
+
 	return nil
 }
 
@@ -16,7 +26,7 @@ func Handler(ctx context.Context, sqsEvent events.SQSEvent) (events.SQSEventResp
 	batchItemFailures := []events.SQSBatchItemFailure{}
 
 	for _, message := range sqsEvent.Records {
-		err := handleMessage()
+		err := handleMessage(message.Body)
 
 		if err != nil {
 			log.Printf("Error processing message %s: %v", message.MessageId, err)
