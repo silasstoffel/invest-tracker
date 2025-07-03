@@ -31,6 +31,7 @@ ALTER TABLE investments ADD COLUMN redemption_policy_type TEXT DEFAULT NULL;
 
 CREATE TABLE investments_summary (
     id TEXT PRIMARY KEY,
+    investment_id TEXT DEFAULT NULL, 
     brokerage TEXT DEFAULT NULL,
     type TEXT NOT NULL,
     symbol TEXT,
@@ -52,3 +53,35 @@ CREATE INDEX idx_investments_summary_brokerage ON investments_summary(brokerage)
 CREATE INDEX idx_investments_summary_symbol ON investments_summary(symbol);
 CREATE INDEX idx_investments_summary_bond_index ON investments_summary(bond_index);
 CREATE INDEX idx_investments_summary_redemption_policy_type ON investments_summary(redemption_policy_type);
+CREATE INDEX idx_investments_summary_investment_id ON investments_summary(investment_id);
+
+
+insert into investments_summary(
+    id,
+    investment_id,
+    brokerage,
+    type,
+    symbol,
+    bond_index,
+    bond_rate,
+    quantity,
+    average_price,
+    total_value,
+    cost,
+    redemption_policy_type,
+    due_date
+) select
+    id,
+    id as investment_id,
+    brokerage,
+    type,
+    symbol,
+    bond_index,
+    bond_rate,
+    quantity,
+    unit_price,
+    total_value,
+    cost,
+    redemption_policy_type,
+    due_date
+  from investments
