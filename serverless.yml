@@ -70,7 +70,7 @@ resources:
       Properties:
         QueueName: calculate-average-price-${opt:stage, 'dev'}.fifo
         FifoQueue: true
-        VisibilityTimeout: 90
+        VisibilityTimeout: 30
         RedrivePolicy:
           deadLetterTargetArn:
             Fn::GetAtt: [calculateAveragePriceQueueDQL, Arn]
@@ -234,8 +234,8 @@ functions:
     role: calculateAveragePriceLambdaRole
     handler: bin/bootstrap
     name: calculate-average-price-${opt:stage, 'dev'}
-    memorySize: 256
-    timeout: 90
+    memorySize: 128
+    timeout: 30
     environment:
       ENVIRONMENT: ${opt:stage, 'dev'}
       CLOUDFLARE_ACCOUNT_ID_DEV: b3262b1ed9d85abab8621e13d0aba2aa
@@ -250,5 +250,6 @@ functions:
             Fn::GetAtt:
               - calculateAveragePriceQueue
               - Arn
-          batchSize: 5
+          batchSize: 1
           functionResponseType: ReportBatchItemFailures
+    reservedConcurrency: 1    
