@@ -251,5 +251,4 @@ functions:
               - calculateAveragePriceQueue
               - Arn
           batchSize: 1
-          functionResponseType: ReportBatchItemFailures
-    reservedConcurrency: 1    
+          functionResponseType: ReportBatchItemFailures    

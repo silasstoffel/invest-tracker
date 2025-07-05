@@ -6,7 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"time"
+
+	cryptoRand "crypto/rand"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -15,17 +18,18 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/cloudflare/cloudflare-go/v4"
 	"github.com/cloudflare/cloudflare-go/v4/d1"
+	"github.com/oklog/ulid/v2"
 	investment_summary_core "github.com/silasstoffel/invest-tracker/apps/investments_summary/core"
 	client "github.com/silasstoffel/invest-tracker/apps/shared/clients"
 	appConfig "github.com/silasstoffel/invest-tracker/config"
 )
 
 type GetSummarizedInvestmentOutput struct {
-	ID           string
-	Quantity     int
-	AveragePrice float64
-	TotalValue   float64
-	Costs        float64
+	ID           string  `json:"id,required"`
+	Quantity     int     `json:"quantity,required"`
+	AveragePrice float64 `json:"average_price,required"`
+	TotalValue   float64 `json:"total_value,required"`
+	Cost         float64 `json:"cost,required"`
 }
 
 type UpdateSummarizedInvestmentInput struct {
@@ -33,7 +37,7 @@ type UpdateSummarizedInvestmentInput struct {
 	Quantity     int
 	AveragePrice float64
 	TotalValue   float64
-	Costs        float64
+	Cost         float64
 }
 
 var (
@@ -69,13 +73,20 @@ func init() {
 	cfClient = clients.CloudflareClient
 }
 
+func createId() string {
+	entropy := ulid.Monotonic(cryptoRand.Reader, 0)
+	t := time.Now().UTC()
+
+	return ulid.MustNew(ulid.Timestamp(t), entropy).String()
+}
+
 func getSummarizedInvestment(input investment_summary_core.InvestmentCreatedInput) (GetSummarizedInvestmentOutput, error) {
 	params := []string{
 		input.Symbol,
 		input.Type,
 		input.Brokerage,
 	}
-	command := "select id, quantity, average_price, total_value, costs from investments_summary where symbol = ? and type = ? and brokerage = ? limit 1"
+	command := "select id, quantity, average_price, total_value, cost from investments_summary where symbol = ? and type = ? and brokerage = ? limit 1"
 
 	res, err := cfClient.D1.Database.Query(context.TODO(), env.Cloudflare.InvestmentTrackDbId, d1.DatabaseQueryParams{
 		AccountID: cloudflare.F(env.Cloudflare.AccountId),
@@ -89,51 +100,105 @@ func getSummarizedInvestment(input investment_summary_core.InvestmentCreatedInpu
 
 	if len(res.Result) > 0 && len(res.Result[0].Results) > 0 {
 		rawRow := res.Result[0].Results[0]
-		row, ok := rawRow.(map[string]interface{})
-		if !ok {
-			return GetSummarizedInvestmentOutput{}, errors.New("failure when casting cloudflare query result")
+		jsonInput, err := json.Marshal(rawRow)
+		if err != nil {
+			return GetSummarizedInvestmentOutput{}, fmt.Errorf("failure to convert interface to json: %w", err)
 		}
 
-		id, _ := row["id"].(string)
-		quantity, _ := row["quantity"].(int)
-		averagePrice, _ := row["average_price"].(float64)
-		totalValue, _ := row["total_value"].(float64)
-		costs, _ := row["total_value"].(float64)
+		var output GetSummarizedInvestmentOutput
+		if err := json.Unmarshal(jsonInput, &output); err != nil {
+			return GetSummarizedInvestmentOutput{}, fmt.Errorf("failure to convert json to struct: %w", err)
+		}
 
-		return GetSummarizedInvestmentOutput{
-			ID:           id,
-			Quantity:     quantity,
-			AveragePrice: averagePrice,
-			TotalValue:   totalValue,
-			Costs:        costs,
-		}, nil
+		return output, nil
 	}
 
 	return GetSummarizedInvestmentOutput{}, errors.New("summarized investment not found")
 }
 
-func createSummarizedInvestment(input investment_summary_core.InvestmentCreatedInput) (GetSummarizedInvestmentOutput, error) {
+func createSummarizedInvestment(input investment_summary_core.InvestmentCreatedInput) (string, error) {
 	if input.OperationType != "buy" && input.OperationType != "sell" {
-		return GetSummarizedInvestmentOutput{}, errors.New("operation type must be 'buy' or 'sell'")
+		return "", errors.New("operation type must be 'buy' or 'sell'")
 	}
 
-	return GetSummarizedInvestmentOutput{}, nil
+	command := `insert into investments_summary(
+		id, investment_id, brokerage, type, symbol,
+		quantity, average_price, total_value, cost,
+		redemption_policy_type, created_at, updated_at{add_column_name}
+	) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?{add_column_value})`
+
+	avgPrice := input.TotalValue / float64(input.Quantity)
+	createdAt := time.Now().Format(time.RFC3339)
+	id := createId()
+
+	params := []string{
+		id,
+		input.ID,
+		input.Brokerage,
+		input.Type,
+		input.Symbol,
+		fmt.Sprintf("%v", input.Quantity),
+		fmt.Sprintf("%v", avgPrice),
+		fmt.Sprintf("%v", input.TotalValue),
+		fmt.Sprintf("%v", input.Cost),
+		input.RedemptionPolicyType,
+		createdAt,
+		createdAt,
+	}
+
+	if input.BondIndex != "" {
+		command = strings.Replace(command, "{add_column_name}", ", bond_index, bond_rate", 1)
+		command = strings.Replace(command, "{add_column_value}", ",?,?", 1)
+		params = append(params, input.BondIndex, fmt.Sprintf("%v", input.BondRate))
+	} else {
+		command = strings.Replace(command, "{add_column_name}", "", 1)
+		command = strings.Replace(command, "{add_column_value}", "", 1)
+	}
+
+	_, err := cfClient.D1.Database.Raw(
+		context.TODO(),
+		env.Cloudflare.InvestmentTrackDbId,
+		d1.DatabaseRawParams{
+			AccountID: cloudflare.F(env.Cloudflare.AccountId),
+			Sql:       cloudflare.F(command),
+			Params:    cloudflare.F(params),
+		},
+	)
+
+	if err != nil {
+		m := fmt.Sprintf("Error executing command on cloudflare. Detail: %v", err)
+		log.Printf(m)
+		log.Printf("Command: %s", command)
+		log.Printf("Params: %v", params)
+		return "", errors.New(m)
+	}
+
+	return id, nil
 }
 
-func updateSummarizedInvestment(input UpdateSummarizedInvestmentInput, createdInvestment investment_summary_core.InvestmentCreatedInput) error {
+func updateSummarizedInvestment(currentPosition UpdateSummarizedInvestmentInput, createdInvestment investment_summary_core.InvestmentCreatedInput) error {
 	if createdInvestment.OperationType != "buy" && createdInvestment.OperationType != "sell" {
 		return errors.New("operation type must be 'buy' or 'sell'")
 	}
 
-	quantity := input.Quantity
-	averagePrice := input.AveragePrice
-	totalValue := input.TotalValue
-	costs := input.Costs
+	quantity := currentPosition.Quantity
+	averagePrice := currentPosition.AveragePrice
+	totalValue := currentPosition.TotalValue
+	costs := currentPosition.Cost
 
 	if createdInvestment.OperationType == "sell" {
-		quantity -= createdInvestment.Quantity
-		totalValue -= createdInvestment.TotalValue
-		costs -= createdInvestment.Cost
+		if quantity == createdInvestment.Quantity {
+			quantity = 0
+			averagePrice = 0
+			totalValue = 0
+			costs = 0
+		} else {
+			// average price does not change when the operation type is sell
+			quantity -= createdInvestment.Quantity
+			// total value is reduced by the average price times the quantity sold
+			totalValue -= (averagePrice * float64(createdInvestment.Quantity))
+			costs -= createdInvestment.Cost
+		}
 	} else {
 		quantity += createdInvestment.Quantity
 		totalValue += createdInvestment.TotalValue
@@ -147,10 +212,10 @@ func updateSummarizedInvestment(input UpdateSummarizedInvestmentInput, createdIn
 		fmt.Sprintf("%f", totalValue),
 		fmt.Sprintf("%f", costs),
 		time.Now().UTC().Format(time.RFC3339),
-		input.ID,
+		currentPosition.ID,
 	}
 
-	command := "update investments_summary set quantity = ?, average_price = ?, total_value = ?, costs = ?, updated_at = ? where id = ?"
+	command := "update investments_summary set quantity = ?, average_price = ?, total_value = ?, cost = ?, updated_at = ? where id = ?"
 
 	_, err := cfClient.D1.Database.Query(context.TODO(), env.Cloudflare.InvestmentTrackDbId, d1.DatabaseQueryParams{
 		AccountID: cloudflare.F(env.Cloudflare.AccountId),
@@ -179,13 +244,13 @@ func handleMessage(msg string) error {
 	if err != nil {
 		if err.Error() == "summarized investment not found" {
 			log.Printf("Summarized investment not found for symbol %s. It does need to create it", input.Symbol)
-			created, err := createSummarizedInvestment(input)
+			summarizedId, err := createSummarizedInvestment(input)
 
 			if err != nil {
 				log.Printf("Failure to create summarized investment: %v", err)
 				return err
 			}
-			log.Printf("Created summarized investment with ID: %s - Symbol: %s", created.ID, input.Symbol)
+			log.Printf("Created summarized investment with ID: %s - Symbol: %s", summarizedId, input.Symbol)
 
 			return nil
 		}
@@ -199,7 +264,7 @@ func handleMessage(msg string) error {
 		Quantity:     summarized.Quantity,
 		AveragePrice: summarized.AveragePrice,
 		TotalValue:   summarized.TotalValue,
-		Costs:        summarized.Costs,
+		Cost:         summarized.Cost,
 	}, input)
 
 	if err != nil {
