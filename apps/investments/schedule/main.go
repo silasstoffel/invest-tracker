@@ -123,6 +123,18 @@ func validateInput(input investment_core.CreateInvestmentInput) error {
 		}
 	}
 
+	if input.OperationType == investment_core.SellOperationType && input.Type == investment_core.BondInvestmentType {
+		sellInvestmentId := strings.Trim(input.SellInvestmentId, "")
+
+		if sellInvestmentId == "" {
+			return fmt.Errorf("sell investment ID is required for sell operation")
+		}
+
+		if len(sellInvestmentId) != 26 {
+			return fmt.Errorf("sell investment ID must be 26 characters long")
+		}
+	}
+
 	return nil
 }
 

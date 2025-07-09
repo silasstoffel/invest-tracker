@@ -5,7 +5,7 @@ CREATE TABLE investments (
     symbol TEXT,
     bond_index TEXT,
     bond_rate NUMERIC(12,4),
-    quantity INTEGER NOT NULL DEFAULT 0,
+    quantity NUMERIC(12,6) NOT NULL DEFAULT 0,
     unit_price NUMERIC(12,4) NOT NULL DEFAULT 0,
     total_value NUMERIC(12,4) NOT NULL,
     cost NUMERIC(12,4) NOT NULL,
@@ -29,6 +29,7 @@ ALTER TABLE investments ADD COLUMN brokerage TEXT DEFAULT NULL;
 ALTER TABLE investments ADD COLUMN note TEXT DEFAULT NULL;
 ALTER TABLE investments ADD COLUMN redemption_policy_type TEXT DEFAULT NULL;
 
+
 CREATE TABLE investments_summary (
     id TEXT PRIMARY KEY,
     investment_id TEXT DEFAULT NULL, 
@@ -37,7 +38,7 @@ CREATE TABLE investments_summary (
     symbol TEXT,
     bond_index TEXT,
     bond_rate NUMERIC(12,4),
-    quantity INTEGER NOT NULL DEFAULT 0,
+    quantity NUMERIC(12,4) NOT NULL DEFAULT 0,
     average_price NUMERIC(12,4) NOT NULL DEFAULT 0,
     total_value NUMERIC(12,4) NOT NULL DEFAULT 0,
     market_value NUMERIC(12,4) NOT NULL DEFAULT 0,
@@ -84,4 +85,7 @@ insert into investments_summary(
     cost,
     redemption_policy_type,
     due_date
-  from investments
+  from investments;
+
+
+ALTER TABLE investments ADD COLUMN sell_investment_id TEXT DEFAULT NULL;

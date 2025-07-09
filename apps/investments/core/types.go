@@ -32,7 +32,7 @@ type InvestmentEntity struct {
 	Symbol               string    `json:"symbol"`
 	BondIndex            string    `json:"bondIndex,omitempty"`
 	BondRate             float64   `json:"bondRate,omitempty"`
-	Quantity             int       `json:"quantity"`
+	Quantity             float64   `json:"quantity"`
 	UnitPrice            float64   `json:"unitPrice"`
 	TotalValue           float64   `json:"totalValue"`
 	Cost                 float64   `json:"cost"`
@@ -44,6 +44,7 @@ type InvestmentEntity struct {
 	Brokerage            string    `json:"brokerage"`
 	Note                 string    `json:"note"`
 	RedemptionPolicyType string    `json:"redemptionPolicyType"`
+	SellInvestmentId     string    `json:"sellInvestmentId,omitempty"`
 	CreatedAt            time.Time `json:"createdAt"`
 	UpdatedAt            time.Time `json:"updatedAt"`
 }
@@ -53,7 +54,7 @@ type CreateInvestmentInput struct {
 	Symbol               string  `json:"symbol"`
 	BondIndex            string  `json:"bondIndex,omitempty"`
 	BondRate             float64 `json:"bondRate,omitempty"`
-	Quantity             int     `json:"quantity"`
+	Quantity             float64 `json:"quantity"`
 	TotalValue           float64 `json:"totalValue"`
 	Cost                 float64 `json:"cost"`
 	OperationType        string  `json:"operationType"`
@@ -62,6 +63,8 @@ type CreateInvestmentInput struct {
 	Brokerage            string  `json:"brokerage"`
 	Note                 string  `json:"note"`
 	RedemptionPolicyType string  `json:"redemptionPolicyType"`
+	// required for bond investment and sell operation type
+	SellInvestmentId string `json:"sellInvestmentId,omitempty"`
 }
 
 type CreateInvestmentOutput struct {

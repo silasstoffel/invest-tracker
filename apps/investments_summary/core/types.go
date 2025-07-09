@@ -10,7 +10,7 @@ type InvestmentCreatedInput struct {
 	Symbol               string    `json:"symbol"`
 	BondIndex            string    `json:"bondIndex,omitempty"`
 	BondRate             float64   `json:"bondRate,omitempty"`
-	Quantity             int       `json:"quantity"`
+	Quantity             float64   `json:"quantity"`
 	UnitPrice            float64   `json:"unitPrice"`
 	TotalValue           float64   `json:"totalValue"`
 	Cost                 float64   `json:"cost"`
@@ -22,6 +22,7 @@ type InvestmentCreatedInput struct {
 	Brokerage            string    `json:"brokerage"`
 	Note                 string    `json:"note"`
 	RedemptionPolicyType string    `json:"redemptionPolicyType"`
+	SellInvestmentId     string    `json:"sellInvestmentId,omitempty"`
 	CreatedAt            time.Time `json:"createdAt"`
 	UpdatedAt            time.Time `json:"updatedAt"`
 }
@@ -32,7 +33,7 @@ type InvestmentSummaryEntity struct {
 	Symbol               string    `json:"symbol"`
 	BondIndex            string    `json:"bondIndex,omitempty"`
 	BondRate             float64   `json:"bondRate,omitempty"`
-	Quantity             int       `json:"quantity"`
+	Quantity             float64   `json:"quantity"`
 	AveragePrice         float64   `json:"averagePrice"`
 	TotalValue           float64   `json:"totalValue"`
 	Cost                 float64   `json:"cost"`
@@ -46,7 +47,7 @@ type InvestmentSummaryEntity struct {
 }
 
 type CalculateAverageCostOutput struct {
-	Quantity     int
+	Quantity     float64
 	TotalValue   float64
 	AveragePrice float64
 }

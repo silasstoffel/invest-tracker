@@ -25,16 +25,16 @@ import (
 )
 
 type GetSummarizedInvestmentOutput struct {
-	ID           string  `json:"id,required"`
-	Quantity     int     `json:"quantity,required"`
-	AveragePrice float64 `json:"average_price,required"`
-	TotalValue   float64 `json:"total_value,required"`
-	Cost         float64 `json:"cost,required"`
+	ID           string  `json:"id"`
+	Quantity     float64 `json:"quantity"`
+	AveragePrice float64 `json:"average_price"`
+	TotalValue   float64 `json:"total_value"`
+	Cost         float64 `json:"cost"`
 }
 
 type UpdateSummarizedInvestmentInput struct {
 	ID           string
-	Quantity     int
+	Quantity     float64
 	AveragePrice float64
 	TotalValue   float64
 	Cost         float64
@@ -81,12 +81,22 @@ func createId() string {
 }
 
 func getSummarizedInvestment(input investment_summary_core.InvestmentCreatedInput) (GetSummarizedInvestmentOutput, error) {
-	params := []string{
-		input.Symbol,
-		input.Type,
-		input.Brokerage,
+	var params []string
+	command := ""
+
+	if input.OperationType == "sell" && input.Type == "bond" {
+		command = "select id, quantity, average_price, total_value, cost from investments_summary where investment_id = ? limit 1"
+		params = []string{
+			input.SellInvestmentId,
+		}
+	} else {
+		params = []string{
+			input.Symbol,
+			input.Type,
+			input.Brokerage,
+		}
+		command = "select id, quantity, average_price, total_value, cost from investments_summary where symbol = ? and type = ? and brokerage = ? limit 1"
 	}
-	command := "select id, quantity, average_price, total_value, cost from investments_summary where symbol = ? and type = ? and brokerage = ? limit 1"
 
 	res, err := cfClient.D1.Database.Query(context.TODO(), env.Cloudflare.InvestmentTrackDbId, d1.DatabaseQueryParams{
 		AccountID: cloudflare.F(env.Cloudflare.AccountId),
@@ -192,6 +202,9 @@ func updateSummarizedInvestment(currentPosition UpdateSummarizedInvestmentInput,
 			averagePrice = 0
 			totalValue = 0
 			costs = 0
+		} else if createdInvestment.Type == "bond" {
+			totalValue -= createdInvestment.TotalValue
+			averagePrice = totalValue / quantity
 		} else {
 			// average price does not change when the operation type is sell
 			quantity -= createdInvestment.Quantity
@@ -207,7 +220,7 @@ func updateSummarizedInvestment(currentPosition UpdateSummarizedInvestmentInput,
 	}
 
 	params := []string{
-		fmt.Sprintf("%d", quantity),
+		fmt.Sprintf("%f", quantity),
 		fmt.Sprintf("%f", averagePrice),
 		fmt.Sprintf("%f", totalValue),
 		fmt.Sprintf("%f", costs),

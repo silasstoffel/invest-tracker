@@ -71,8 +71,8 @@ func createId() string {
 func saveInvestment(entity investment_core.InvestmentEntity) error {
 	command := `INSERT INTO investments (
 		id, type, symbol, quantity, unit_price, total_value, cost, operation_type, operation_date,
-		operation_year, operation_month, due_date, created_at, updated_at, brokerage, note, redemption_policy_type {add_column_name}) VALUES (
-			?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?{add_column_value})`
+		operation_year, operation_month, due_date, created_at, updated_at, brokerage, note, redemption_policy_type, sell_investment_id {add_column_name}) VALUES (
+			?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?{add_column_value})`
 
 	params := []string{
 		entity.ID,
@@ -92,6 +92,7 @@ func saveInvestment(entity investment_core.InvestmentEntity) error {
 		entity.Brokerage,
 		entity.Note,
 		entity.RedemptionPolicyType,
+		entity.SellInvestmentId,
 	}
 
 	if entity.BondIndex != "" {
@@ -141,7 +142,7 @@ func createInvestment(input string) (investment_core.InvestmentEntity, error) {
 		BondIndex:            data.BondIndex,
 		BondRate:             data.BondRate,
 		Quantity:             data.Quantity,
-		UnitPrice:            data.TotalValue / float64(data.Quantity),
+		UnitPrice:            data.TotalValue / data.Quantity,
 		TotalValue:           data.TotalValue,
 		Cost:                 data.Cost,
 		OperationType:        data.OperationType,
@@ -154,6 +155,7 @@ func createInvestment(input string) (investment_core.InvestmentEntity, error) {
 		UpdatedAt:            time.Now().UTC(),
 		RedemptionPolicyType: data.RedemptionPolicyType,
 		Note:                 data.Note,
+		SellInvestmentId:     data.SellInvestmentId,
 	}
 
 	err = saveInvestment(entity)
@@ -192,12 +194,12 @@ func Handler(ctx context.Context, sqsEvent events.SQSEvent) (events.SQSEventResp
 			log.Printf(m, err)
 			continue
 		}
-
+		log.Printf("Sending message to calculate-average-price-env-queue.fifo: %s", string(messageContent))
 		_, err = sqsClient.SendMessage(ctx, &sqs.SendMessageInput{
 			QueueUrl:               aws.String(queueURL),
 			MessageBody:            aws.String(string(messageContent)),
 			MessageDeduplicationId: aws.String(entity.ID),
-			MessageGroupId:         aws.String(entity.Symbol),
+			MessageGroupId:         aws.String(strings.ReplaceAll(entity.Symbol, " ", "_")),
 		})
 
 		if err != nil {

@@ -15,7 +15,7 @@ func CalculateAverageCost(createdInvestment InvestmentCreatedInput, investments 
 }
 
 func handleAverageCost(investments []InvestmentCreatedInput) CalculateAverageCostOutput {
-	quantity := 0
+	var quantity float64 = 0
 	var totalValue float64 = 0
 	var averagePrice float64 = 0
 
