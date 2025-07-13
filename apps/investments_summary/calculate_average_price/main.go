@@ -134,8 +134,8 @@ func createSummarizedInvestment(input investment_summary_core.InvestmentCreatedI
 	command := `insert into investments_summary(
 		id, investment_id, brokerage, type, symbol,
 		quantity, average_price, total_value, cost,
-		redemption_policy_type, created_at, updated_at{add_column_name}
-	) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?{add_column_value})`
+		redemption_policy_type, created_at, updated_at, last_operation_date {add_column_name}
+	) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? {add_column_value})`
 
 	avgPrice := input.TotalValue / float64(input.Quantity)
 	createdAt := time.Now().Format(time.RFC3339)
@@ -154,6 +154,7 @@ func createSummarizedInvestment(input investment_summary_core.InvestmentCreatedI
 		input.RedemptionPolicyType,
 		createdAt,
 		createdAt,
+		input.OperationDate,
 	}
 
 	if input.BondIndex != "" {
@@ -183,6 +184,7 @@ func createSummarizedInvestment(input investment_summary_core.InvestmentCreatedI
 		return "", errors.New(m)
 	}
 
+	saveHistory(id)
 	return id, nil
 }
 
@@ -225,10 +227,11 @@ func updateSummarizedInvestment(currentPosition UpdateSummarizedInvestmentInput,
 		fmt.Sprintf("%f", totalValue),
 		fmt.Sprintf("%f", costs),
 		time.Now().UTC().Format(time.RFC3339),
+		createdInvestment.OperationDate,
 		currentPosition.ID,
 	}
 
-	command := "update investments_summary set quantity = ?, average_price = ?, total_value = ?, cost = ?, updated_at = ? where id = ?"
+	command := "update investments_summary set quantity = ?, average_price = ?, total_value = ?, cost = ?, updated_at = ?, last_operation_date = ? where id = ?"
 
 	_, err := cfClient.D1.Database.Query(context.TODO(), env.Cloudflare.InvestmentTrackDbId, d1.DatabaseQueryParams{
 		AccountID: cloudflare.F(env.Cloudflare.AccountId),
@@ -238,6 +241,72 @@ func updateSummarizedInvestment(currentPosition UpdateSummarizedInvestmentInput,
 
 	if err != nil {
 		return fmt.Errorf("failure to update summarized investment: %w", err)
+	}
+
+	saveHistory(currentPosition.ID)
+
+	return nil
+}
+
+func saveHistory(summarizedInvestmentId string) error {
+	command := `INSERT INTO investments_summary_history(
+    investment_id,
+    last_operation_date,
+    operation_month,
+    operation_year, 
+    brokerage,
+    type,
+    symbol,
+    bond_index,
+    bond_rate,
+    quantity,
+    average_price,
+    total_value,
+    market_value,
+    cost,
+    redemption_policy_type,
+    due_date,
+    investment_summary_id   
+) SELECT 
+    investment_id,
+    last_operation_date,
+    strftime('%m', last_operation_date) as operation_month,
+    strftime('%Y', last_operation_date) as operation_year,
+    brokerage,
+    type,
+    symbol,
+    bond_index,
+    bond_rate,
+    quantity,
+    average_price,
+    total_value,
+    market_value,
+    cost,
+    redemption_policy_type,
+    due_date,
+    id as investment_summary_id 
+  FROM investments_summary
+  WHERE id = ?`
+
+	params := []string{
+		summarizedInvestmentId,
+	}
+	_, err := cfClient.D1.Database.Raw(
+		context.TODO(),
+		env.Cloudflare.InvestmentTrackDbId,
+		d1.DatabaseRawParams{
+			AccountID: cloudflare.F(env.Cloudflare.AccountId),
+			Sql:       cloudflare.F(command),
+			Params:    cloudflare.F(params),
+		},
+	)
+
+	if err != nil {
+		m := fmt.Sprintf("[save-history]: error when save history. Detail: %v", err)
+		log.Printf(m)
+		log.Printf("Command: %s", command)
+		log.Printf("Params: %v", params)
+		return errors.New(m)
 	}
 
 	return nil
