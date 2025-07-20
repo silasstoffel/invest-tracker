@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"time"
 
@@ -21,6 +22,7 @@ import (
 	"github.com/cloudflare/cloudflare-go/v4/option"
 	"github.com/oklog/ulid/v2"
 	investment_core "github.com/silasstoffel/invest-tracker/apps/investments/core"
+	"github.com/silasstoffel/invest-tracker/apps/shared/telegram"
 	appConfig "github.com/silasstoffel/invest-tracker/config"
 )
 
@@ -170,6 +172,8 @@ func createInvestment(input string) (investment_core.InvestmentEntity, error) {
 
 func Handler(ctx context.Context, sqsEvent events.SQSEvent) (events.SQSEventResponse, error) {
 	batchItemFailures := []events.SQSBatchItemFailure{}
+	prefix := os.Getenv("AWS_LAMBDA_FUNCTION_NAME")
+	tb := telegram.NewTelegramBot(env)
 
 	for _, message := range sqsEvent.Records {
 
@@ -185,6 +189,7 @@ func Handler(ctx context.Context, sqsEvent events.SQSEvent) (events.SQSEventResp
 			log.Printf("Error processing message %s: %v", message.MessageId, err)
 			log.Printf("Received message: %s", message.Body)
 			batchItemFailures = append(batchItemFailures, events.SQSBatchItemFailure{ItemIdentifier: message.MessageId})
+			tb.SendMessage(fmt.Sprintf("*[%s] Failure when create an investment.* %v ```json %s```", prefix, err.Error(), string(sqsEvent.Records[0].Body)))
 			continue
 		}
 
@@ -205,7 +210,12 @@ func Handler(ctx context.Context, sqsEvent events.SQSEvent) (events.SQSEventResp
 		if err != nil {
 			m := "Failure to send message to calculate-average-price-env-queue.fifo. Detail: %v"
 			log.Printf(m, err)
+			tb.SendMessage(fmt.Sprintf("*[%s] Failure when create an investment.* Detail:```sh %s```  Input:```json %s```", prefix, m, string(sqsEvent.Records[0].Body)))
 		}
+	}
+
+	if len(batchItemFailures) == 0 {
+		tb.SendMessage(fmt.Sprintf("*[%s] Investment created successfully.* ```json %s```", prefix, string(sqsEvent.Records[0].Body)))
 	}
 
 	return events.SQSEventResponse{

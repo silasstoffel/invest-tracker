@@ -18,12 +18,18 @@ type CloudflareConfig struct {
 
 type Aws struct{}
 
+type TelegramConfig struct {
+	Token  string
+	ChatId string
+}
+
 type Config struct {
 	Env                           string
 	CreateInvestmentQueueURL      string
 	CalculateAveragePriceQueueURL string
 	Cloudflare                    CloudflareConfig
 	Aws                           *Aws
+	TelegramConfig                *TelegramConfig
 }
 
 func NewConfigFromEnvVars() *Config {
@@ -48,6 +54,10 @@ func NewConfigFromEnvVars() *Config {
 			ApiKeyParamName:     apiKeyParamName,
 		},
 		Aws: &Aws{},
+		TelegramConfig: &TelegramConfig{
+			Token:  os.Getenv("TELEGRAM_TOKEN"),
+			ChatId: os.Getenv("TELEGRAM_CHAT_ID"),
+		},
 	}
 }
 

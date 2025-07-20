@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"time"
 
@@ -21,6 +22,7 @@ import (
 	"github.com/oklog/ulid/v2"
 	investment_summary_core "github.com/silasstoffel/invest-tracker/apps/investments_summary/core"
 	client "github.com/silasstoffel/invest-tracker/apps/shared/clients"
+	"github.com/silasstoffel/invest-tracker/apps/shared/telegram"
 	appConfig "github.com/silasstoffel/invest-tracker/config"
 )
 
@@ -359,6 +361,8 @@ func handleMessage(msg string) error {
 
 func Handler(ctx context.Context, sqsEvent events.SQSEvent) (events.SQSEventResponse, error) {
 	batchItemFailures := []events.SQSBatchItemFailure{}
+	prefix := os.Getenv("AWS_LAMBDA_FUNCTION_NAME")
+	tb := telegram.NewTelegramBot(env)
 
 	for _, message := range sqsEvent.Records {
 		err := handleMessage(message.Body)
@@ -367,8 +371,13 @@ func Handler(ctx context.Context, sqsEvent events.SQSEvent) (events.SQSEventResp
 			log.Printf("Error processing message %s: %v", message.MessageId, err)
 			log.Printf("Received message: %s", message.Body)
 			batchItemFailures = append(batchItemFailures, events.SQSBatchItemFailure{ItemIdentifier: message.MessageId})
+			tb.SendMessage(fmt.Sprintf("*[%s] Error when calculate average price*. %s ```json %s```", prefix, err.Error(), string(sqsEvent.Records[0].Body)))
 			continue
 		}
+	}
+
+	if len(batchItemFailures) == 0 {
+		tb.SendMessage(fmt.Sprintf("*[%s] Average price calculated successfully.* ```json %s```", prefix, string(sqsEvent.Records[0].Body)))
 	}
 
 	return events.SQSEventResponse{
