@@ -246,6 +246,7 @@ func updateSummarizedInvestment(currentPosition UpdateSummarizedInvestmentInput,
 	}
 
 	saveHistory(currentPosition.ID)
+	updateProfitAndLoss(currentPosition, createdInvestment)
 
 	return nil
 }
@@ -312,6 +313,46 @@ func saveHistory(summarizedInvestmentId string) error {
 	}
 
 	return nil
+}
+
+func updateProfitAndLoss(currentPosition UpdateSummarizedInvestmentInput, createdInvestment investment_summary_core.InvestmentCreatedInput) {
+	var acceptedTypes = map[string]int{
+		"fii":   1,
+		"stock": 1,
+		"reit":  1,
+		"etf":   1,
+	}
+	_, ok := acceptedTypes[createdInvestment.Type]
+
+	if createdInvestment.OperationType != "sell" || !ok {
+		return
+	}
+
+	averagePrice := currentPosition.AveragePrice
+	// PNL = Profit and Loss
+	pnl := (createdInvestment.TotalValue - (averagePrice * createdInvestment.Quantity))
+
+	command := `UPDATE investments SET pnl = ?, updated_at = ?, average_selling_price = ? WHERE id = ?`
+
+	params := []string{
+		fmt.Sprintf("%f", pnl),
+		time.Now().UTC().Format(time.RFC3339),
+		fmt.Sprintf("%f", averagePrice),
+		createdInvestment.ID,
+	}
+
+	_, err := cfClient.D1.Database.Query(context.TODO(), env.Cloudflare.InvestmentTrackDbId, d1.DatabaseQueryParams{
+		AccountID: cloudflare.F(env.Cloudflare.AccountId),
+		Sql:       cloudflare.F(command),
+		Params:    cloudflare.F(params),
+	})
+
+	if err != nil {
+		m := fmt.Sprintf("Failure to update profit and loss: %v", err)
+		log.Printf(m)
+		log.Printf("Command: %s", command)
+		log.Printf("Params: %v", params)
+	}
 }
 
 func handleMessage(msg string) error {

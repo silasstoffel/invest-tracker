@@ -157,3 +157,9 @@ INSERT INTO investments_summary_history(
     id as investment_summary_id 
   FROM investments_summary
   WHERE id = ?;
+
+
+ALTER TABLE investments ADD COLUMN pnl NUMERIC(12, 4) NOT NULL DEFAULT 0;
+ALTER TABLE investments ADD COLUMN average_selling_price NUMERIC(12, 4) NOT NULL DEFAULT 0;
+
+
