@@ -212,10 +212,6 @@ functions:
     timeout: 30
     environment:
       ENVIRONMENT: ${opt:stage, 'dev'}
-      CLOUDFLARE_ACCOUNT_ID_DEV: b3262b1ed9d85abab8621e13d0aba2aa
-      CLOUDFLARE_ACCOUNT_ID_PROD: 4bb3c96a08e81f83a23daa00259c7bb2
-      CLOUDFLARE_DB_ID_DEV: e256f11a-1b2e-4add-bcec-36697eb80eec
-      CLOUDFLARE_DB_ID_PROD: b3b7b94b-a93e-4a3c-ba0c-ae4567beb9d1
       CALCULATE_AVERAGE_PRICE_QUEUE_URL: https://sqs.us-east-1.amazonaws.com/${aws:accountId}/calculate-average-price-${opt:stage, 'dev'}.fifo
       TELEGRAM_TOKEN: ${ssm(raw):/invest-track-${opt:stage, 'dev'}/telegram/bot-token}
       TELEGRAM_CHAT_ID: 98047971
@@ -243,10 +239,6 @@ functions:
     timeout: 30
     environment:
       ENVIRONMENT: ${opt:stage, 'dev'}
-      CLOUDFLARE_ACCOUNT_ID_DEV: b3262b1ed9d85abab8621e13d0aba2aa
-      CLOUDFLARE_ACCOUNT_ID_PROD: 4bb3c96a08e81f83a23daa00259c7bb2
-      CLOUDFLARE_DB_ID_DEV: e256f11a-1b2e-4add-bcec-36697eb80eec
-      CLOUDFLARE_DB_ID_PROD: b3b7b94b-a93e-4a3c-ba0c-ae4567beb9d1
       TELEGRAM_TOKEN: ${ssm(raw):/invest-track-${opt:stage, 'dev'}/telegram/bot-token}                        
       TELEGRAM_CHAT_ID: 98047971
       CLOUDFLARE_API_KEY: ${ssm(raw):/invest-track-${opt:stage, 'dev'}/cloudflare/api-key}
