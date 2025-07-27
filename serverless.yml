@@ -133,11 +133,6 @@ resources:
                   Resource: "*"
                 - Effect: Allow
                   Action:
-                    - ssm:GetParameter
-                  Resource:
-                    - arn:aws:ssm:${aws:region}:${aws:accountId}:parameter/invest-track-${opt:stage}/cloudflare/*
-                - Effect: Allow
-                  Action:
                     - sqs:SendMessage
                   Resource:
                     - Fn::GetAtt: [createInvestmentQueueDQL, Arn]
@@ -175,11 +170,6 @@ resources:
                     - logs:CreateLogStream
                     - logs:PutLogEvents
                   Resource: "*"
-                - Effect: Allow
-                  Action:
-                    - ssm:GetParameter
-                  Resource:
-                    - arn:aws:ssm:${aws:region}:${aws:accountId}:parameter/invest-track-${opt:stage}/cloudflare/*
                 - Effect: Allow
                   Action:
                     - sqs:SendMessage
