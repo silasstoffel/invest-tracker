@@ -13,7 +13,7 @@ import (
 type CloudflareConfig struct {
 	AccountId           string
 	InvestmentTrackDbId string
-	ApiKeyParamName     string // Identifier to read API Key value
+	ApiKey              string
 }
 
 type Aws struct{}
@@ -35,13 +35,9 @@ type Config struct {
 func NewConfigFromEnvVars() *Config {
 	e := strings.ToLower(os.Getenv("ENVIRONMENT"))
 	env := "development"
-	getEnvPrefix := "DEV"
-	apiKeyParamName := "/invest-track-dev/cloudflare/api-key"
 
 	if e == "prod" || e == "production" || e == "prd" {
 		env = "production"
-		getEnvPrefix = "PROD"
-		apiKeyParamName = "/invest-track-prod/cloudflare/api-key"
 	}
 
 	return &Config{
@@ -49,9 +45,9 @@ func NewConfigFromEnvVars() *Config {
 		CreateInvestmentQueueURL:      os.Getenv("CREATE_INVESTMENT_QUEUE_URL"),
 		CalculateAveragePriceQueueURL: os.Getenv("CALCULATE_AVERAGE_PRICE_QUEUE_URL"),
 		Cloudflare: CloudflareConfig{
-			AccountId:           os.Getenv(fmt.Sprintf("CLOUDFLARE_ACCOUNT_ID_%s", getEnvPrefix)),
-			InvestmentTrackDbId: os.Getenv(fmt.Sprintf("CLOUDFLARE_DB_ID_%s", getEnvPrefix)),
-			ApiKeyParamName:     apiKeyParamName,
+			AccountId:           os.Getenv("CLOUDFLARE_ACCOUNT_ID"),
+			InvestmentTrackDbId: os.Getenv("CLOUDFLARE_DB_ID"),
+			ApiKey:              os.Getenv("CLOUDFLARE_API_KEY"),
 		},
 		Aws: &Aws{},
 		TelegramConfig: &TelegramConfig{

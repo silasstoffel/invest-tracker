@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
-	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/cloudflare/cloudflare-go/v4"
 	"github.com/cloudflare/cloudflare-go/v4/d1"
 	"github.com/cloudflare/cloudflare-go/v4/option"
@@ -42,20 +41,9 @@ func init() {
 		log.Println(m)
 		panic(m)
 	}
-	ssmClient := ssm.NewFromConfig(cfg)
-	ssmOutput, err := ssmClient.GetParameter(ctx, &ssm.GetParameterInput{
-		Name:           &env.Cloudflare.ApiKeyParamName,
-		WithDecryption: aws.Bool(true),
-	})
-
-	if err != nil {
-		m := fmt.Sprintf("Failure to load data from parameter store: %v", err)
-		log.Println(m)
-		panic(m)
-	}
 
 	cfClient = cloudflare.NewClient(
-		option.WithAPIToken(*ssmOutput.Parameter.Value),
+		option.WithAPIToken(env.Cloudflare.ApiKey),
 	)
 
 	sqsClient = sqs.NewFromConfig(cfg)

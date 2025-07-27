@@ -14,9 +14,6 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/cloudflare/cloudflare-go/v4"
 	"github.com/cloudflare/cloudflare-go/v4/d1"
 	"github.com/oklog/ulid/v2"
@@ -52,26 +49,9 @@ var (
 func init() {
 	env = appConfig.NewConfigFromEnvVars()
 	ctx = context.Background()
-	cfg, err := config.LoadDefaultConfig(ctx)
-	if err != nil {
-		m := fmt.Sprintf("Failure to load aws config: %v", err)
-		log.Println(m)
-		panic(m)
-	}
-	ssmClient := ssm.NewFromConfig(cfg)
-	ssmOutput, err := ssmClient.GetParameter(ctx, &ssm.GetParameterInput{
-		Name:           &env.Cloudflare.ApiKeyParamName,
-		WithDecryption: aws.Bool(true),
-	})
-
-	if err != nil {
-		m := fmt.Sprintf("Failure to load data from parameter store: %v", err)
-		log.Println(m)
-		panic(m)
-	}
 
 	clients = client.CreateNewClients()
-	clients.InitCloudflare(*ssmOutput.Parameter.Value)
+	clients.InitCloudflare(env.Cloudflare.ApiKey)
 	cfClient = clients.CloudflareClient
 }
 
