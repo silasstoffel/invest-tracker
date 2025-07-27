@@ -7,7 +7,6 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.36.5
 	github.com/aws/aws-sdk-go-v2/config v1.29.16
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.38.7
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.59.3
 	github.com/cloudflare/cloudflare-go/v4 v4.5.1
 	github.com/oklog/ulid/v2 v2.1.1
 )
