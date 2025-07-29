@@ -9,6 +9,9 @@ build: gomodgen
 	env GOARCH=amd64 GOOS=linux go build -tags lambda.norpc -ldflags="-s -w" -o bin/bootstrap apps/investments/create/main.go
 	cd ./bin && zip create-investment.zip bootstrap
 
+	env GOARCH=amd64 GOOS=linux go build -tags lambda.norpc -ldflags="-s -w" -o bin/bootstrap apps/investments/due_date_notifier/main.go
+	cd ./bin && zip due-date-notifier.zip bootstrap
+
 	env GOARCH=amd64 GOOS=linux go build -tags lambda.norpc -ldflags="-s -w" -o bin/bootstrap apps/investments_summary/calculate_average_price/main.go
 	cd ./bin && zip calculate-average-price.zip bootstrap
 clean:

@@ -243,4 +243,23 @@ functions:
               - calculateAveragePriceQueue
               - Arn
           batchSize: 1
-          functionResponseType: ReportBatchItemFailures    
+          functionResponseType: ReportBatchItemFailures
+
+  due-date-notifier:
+    description: "Notify when investment due date is coming"
+    handler: bin/bootstrap
+    name: due-date-notifier-${opt:stage, 'dev'}
+    memorySize: 128	
+    environment:
+      ENVIRONMENT: ${opt:stage, 'dev'}
+      TELEGRAM_TOKEN: ${ssm(raw):/invest-track-${opt:stage, 'dev'}/telegram/bot-token}
+      TELEGRAM_CHAT_ID: 98047971
+      CLOUDFLARE_API_KEY: ${ssm(raw):/invest-track-${opt:stage, 'dev'}/cloudflare/api-key}
+      CLOUDFLARE_ACCOUNT_ID: ${ssm(raw):/invest-track-${opt:stage, 'dev'}/cloudflare/account-id}
+      CLOUDFLARE_DB_ID: ${ssm(raw):/invest-track-${opt:stage, 'dev'}/cloudflare/db-id}      
+    package:
+      artifact: ./bin/due-date-notifier.zip
+    events:
+      - schedule:
+          #rate: rate(2 minutes)
+          rate: cron(30 10 ? * SUN *)
