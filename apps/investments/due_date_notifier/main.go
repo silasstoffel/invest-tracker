@@ -92,6 +92,7 @@ func Handler() error {
 	env := appConfig.NewConfigFromEnvVars()
 
 	if env.Env != "production" {
+		log.Printf("Skipping due date notifier in non-production environment: %s", env.Env)
 		return nil
 	}
 
@@ -100,6 +101,7 @@ func Handler() error {
 	tb := telegram.NewTelegramBot(env)
 
 	if err != nil {
+		log.Printf("Failure to read investments: %v", err)
 		tb.SendMessage(fmt.Sprintf("*[%s] Failure to read investments* ```%s```", prefix, err.Error()))
 		return nil
 	}
@@ -108,8 +110,9 @@ func Handler() error {
 	if counter > 0 {
 		jsonContent, _ := json.Marshal(investments)
 		tb.SendMessage(fmt.Sprintf("*[%s] %d Investment(s) due this week* ```json %s```", prefix, counter, jsonContent))
-	}
 
+	}
+	log.Printf("Found %d investment(s) due this week", counter)
 	return nil
 }
 
