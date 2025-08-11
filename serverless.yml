@@ -24,6 +24,10 @@ provider:
 
   logRetentionInDays: 1
 
+  deploymentBucket:
+    # On deployment, serverless prunes artifacts older than this limit (default: 5)
+    maxPreviousDeploymentArtifacts: 3
+
 # you can add statements to the Lambda function's IAM Role here
 #  iam:
 #    role:
