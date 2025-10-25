@@ -17,3 +17,11 @@ where
   i.operation_type = 'buy'
   and (due_date is null or due_date = '' or due_date >= DATE('now'))
 group by 1;
+
+
+select 
+	count(*) as counter,
+	sum(i.total_value) as total_invested
+from investments_summary i
+where
+  (due_date is null or due_date = '' or due_date >= DATE('now'))
