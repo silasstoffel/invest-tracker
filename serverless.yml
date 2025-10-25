@@ -267,3 +267,18 @@ functions:
       - schedule:
           #rate: rate(2 minutes)
           rate: cron(30 10 ? * SUN *)
+
+  get-investment-summary-by-symbol:
+    description: "Get investment summary by symbol"
+    #role: scheduleInvestmentLambdaRole
+    handler: bin/bootstrap
+    name: get-investment-summary-by-symbol-${opt:stage, 'dev'}
+    memorySize: 128	
+    environment:
+      ENVIRONMENT: ${opt:stage, 'dev'}
+    package:
+      artifact: ./bin/get-investment-summary-by-symbol.zip
+    events:
+      - http:
+          path: /investments/summary/{symbol}
+          method: get
