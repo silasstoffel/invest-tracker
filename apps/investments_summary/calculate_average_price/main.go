@@ -65,8 +65,13 @@ func createId() string {
 func getSummarizedInvestment(input investment_summary_core.InvestmentCreatedInput) (GetSummarizedInvestmentOutput, error) {
 	var params []string
 	command := ""
+	if input.Type == "bond" {
 
-	if input.OperationType == "sell" && input.Type == "bond" {
+		if input.OperationType != "sell" {
+			// forcing an error to indicate that the summarized investment was not found
+			return GetSummarizedInvestmentOutput{}, errors.New("summarized investment not found")
+		}
+
 		command = "select id, quantity, average_price, total_value, cost from investments_summary where investment_id = ? limit 1"
 		params = []string{
 			input.SellInvestmentId,
