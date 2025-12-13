@@ -224,6 +224,19 @@ functions:
           maximumBatchingWindow: 5
           functionResponseType: ReportBatchItemFailures
 
+  recalculate-avg-price:
+    description: "Lambda function to recalculate avg price (temporary solution)"
+    role: createInvestmentLambdaRole
+    handler: bin/bootstrap
+    name: recalculate-avg-price-${opt:stage, 'dev'}
+    memorySize: 256
+    timeout: 90
+    environment:
+      ENVIRONMENT: ${opt:stage, 'dev'}
+      CALCULATE_AVERAGE_PRICE_QUEUE_URL: https://sqs.us-east-1.amazonaws.com/${aws:accountId}/calculate-average-price-${opt:stage, 'dev'}.fifo
+    package: 
+      artifact: ./bin/recalculate-avg-price.zip
+
   calculate-average-price:
     description: "Lambda function to calculate average price"
     role: calculateAveragePriceLambdaRole

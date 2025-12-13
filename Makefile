@@ -16,7 +16,11 @@ build: gomodgen
 	cd ./bin && zip calculate-average-price.zip bootstrap
 
 	env GOARCH=amd64 GOOS=linux go build -tags lambda.norpc -ldflags="-s -w" -o bin/bootstrap apps/investments/get_investment_summary_by_symbol/main.go
-	cd ./bin && zip get-investment-summary-by-symbol.zip bootstrap	
+	cd ./bin && zip get-investment-summary-by-symbol.zip bootstrap
+
+	env GOARCH=amd64 GOOS=linux go build -tags lambda.norpc -ldflags="-s -w" -o bin/bootstrap apps/investments/recalculate-avg-price/main.go
+	cd ./bin && zip recalculate-avg-price.zip bootstrap
+
 clean:
 #	rm -rf ./bin ./vendor go.sum
 	go clean
