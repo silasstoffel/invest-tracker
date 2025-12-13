@@ -121,8 +121,9 @@ func createSummarizedInvestment(input investment_summary_core.InvestmentCreatedI
 	command := `insert into investments_summary(
 		id, investment_id, brokerage, type, symbol,
 		quantity, average_price, total_value, cost,
-		redemption_policy_type, created_at, updated_at, last_operation_date {add_column_name}
-	) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? {add_column_value})`
+		redemption_policy_type, created_at, updated_at,
+		last_operation_date, due_date {add_column_name}
+	) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? {add_column_value})`
 
 	avgPrice := input.TotalValue / float64(input.Quantity)
 	createdAt := time.Now().Format(time.RFC3339)
@@ -142,6 +143,7 @@ func createSummarizedInvestment(input investment_summary_core.InvestmentCreatedI
 		createdAt,
 		createdAt,
 		input.OperationDate,
+		input.DueDate,
 	}
 
 	if input.BondIndex != "" {
