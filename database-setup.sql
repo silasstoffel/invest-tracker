@@ -163,3 +163,70 @@ ALTER TABLE investments ADD COLUMN pnl NUMERIC(12, 4) NOT NULL DEFAULT 0;
 ALTER TABLE investments ADD COLUMN average_selling_price NUMERIC(12, 4) NOT NULL DEFAULT 0;
 
 
+
+CREATE TABLE symbol_details (
+    id TEXT PRIMARY KEY,
+    type TEXT NOT NULL, 
+    segment TEXT NOT NULL,
+    sub_segment TEXT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX idx_symbol_details_type ON symbol_details(type);
+CREATE INDEX idx_symbol_details_segment ON symbol_details(segment);
+
+insert into symbol_details (id, "type", segment, sub_segment) values
+('B3SA3', '#', '#', null),
+('BARI11','#', '#', null),
+('BBDC3','#', '#', null),
+('BPAN4','#', '#', null),
+('BRSR6','#', '#', null),
+('BTHF11','#', '#', null),
+('BTLG11','#', '#', null),
+('CLIN11','#', '#', null),
+('COGN3','#', '#', null),
+('CVCB3','#', '#', null),
+('FIGS11','#', '#', null),
+('FIIB11','#', '#', null),
+('HGBS11','#', '#', null),
+('HGFF11','#', '#', null),
+('HGLG11','#', '#', null),
+('HGRU11','#', '#', null),
+('HLOG11','#', '#', null),
+('HSML11','#', '#', null),
+('HYPE3','#', '#', null),
+('IRDM11','#', '#', null),
+('IRIM11','#', '#', null),
+('ITRI11','#', '#', null),
+('JSRE11','#', '#', null),
+('KCRE11','#', '#', null),
+('KNRI11','#', '#', null),
+('LOGG3','#', '#', null),
+('LREN3','#', '#', null),
+('LVBI11','#', '#', null),
+('MGLU3','#', '#', null),
+('MILS3','#', '#', null),
+('NEOE3','#', '#', null),
+('PCIP11','#', '#', null),
+('PLCR11','#', '#', null),
+('PMLL11','#', '#', null),
+('PORD11','#', '#', null),
+('PSEC11','#', '#', null),
+('RBRF11','#', '#', null),
+('RBRL11','#', '#', null),
+('RBRX11','#', '#', null),
+('RECR11','#', '#', null),
+('RECV3','#', '#', null),
+('RFOF11','#', '#', null),
+('RVBI11','#', '#', null),
+('SOJA3','#', '#', null),
+('TRXF11','#', '#', null),
+('VALE3','#', '#', null),
+('VAMO3','#', '#', null),
+('VILG11','#', '#', null),
+('VINO11','#', '#', null),
+('WHGR11','#', '#', null),
+('WIZC3','#', '#', null),
+('XPIN11','#', '#', null);
+
