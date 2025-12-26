@@ -44,3 +44,7 @@ gomodgen:
 
 deploy-py-apps-dev:
 	npx sls deploy --stage dev --config serverless.python.runtime.yml --verbose
+
+deploy-py-apps-dev:
+	npx sls deploy --stage prod --config serverless.python.runtime.yml --verbose
+		
