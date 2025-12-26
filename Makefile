@@ -33,7 +33,7 @@ deploy-dev: clean build
 	npx sls deploy --stage dev --verbose
 
 remove-dev: clean build
-	npx sls remove --stage dev --verbose	
+	npx sls remove --stage dev --verbose
 
 dev: clean build 
 	npx serverless offline --useDocker --host 0.0.0.0
@@ -41,3 +41,6 @@ dev: clean build
 gomodgen:
 	chmod u+x gomod.sh
 	./gomod.sh
+
+deploy-py-apps-dev:
+	npx sls deploy --stage dev --config serverless.python.runtime.yml --verbose

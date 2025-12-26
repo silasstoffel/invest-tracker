@@ -1,0 +1,60 @@
+service: invest-tracker-api-py
+app: invest-tracker
+#org: silas-stoffel
+
+# You can pin your service to only deploy with a specific Serverless version
+# Check out our docs for more details
+frameworkVersion: '^4.15.0'
+
+plugins:
+  - serverless-offline
+
+custom:
+    serverless-offline:
+        noPrependStageInUrl: true
+    pythonRequirements:
+        usePipenv: true
+        zip: true
+        slim: true
+
+provider:
+  name: aws
+  runtime: python3.13
+
+# you can overwrite defaults here
+  stage: ${opt:stage, 'dev'}
+  region: us-east-1
+
+  logRetentionInDays: 1
+
+  deploymentBucket:
+    # On deployment, serverless prunes artifacts older than this limit (default: 5)
+    maxPreviousDeploymentArtifacts: 3
+
+# you can add statements to the Lambda function's IAM Role here
+#  iam:
+#    role:
+#      statements:
+#        - Effect: "Allow"
+#          Action:
+#            - "sqs:SendMessage"
+#          Resource:
+#            - Fn::GetAtt: [createInvestmentQueue, Arn]
+  
+
+package:
+  individually: false
+  exclude:
+    - '**/*'
+  include:
+    - apps/brokerage_extractor/**
+
+functions:
+  hello:
+    description: "Hello"
+    handler: apps.brokerage_extractor.handler.hello
+    name: hello-${opt:stage, 'dev'}
+    memorySize: 128
+    environment:
+      ENVIRONMENT: ${opt:stage, 'dev'}
+
