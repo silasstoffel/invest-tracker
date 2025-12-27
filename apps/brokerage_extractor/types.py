@@ -22,4 +22,3 @@ class Operation(TypedDict):
             "total_value": self.total_value,
             "costs": self.costs,
         }
-
