@@ -9,12 +9,31 @@ from symbol import search_symbol, search_symbol_type
 from datetime import datetime
 from .types import Operation
 
-def extract_operations_from_pdf(file_path: str):
+def extract_operations_from_pdf(file_path: str) -> list[Operation]:
+    operations: list[Operation] = []
+    
+    operation_total_value = None
+    liquidation_value = None
+    exchange_fees_value = None
+
     with pdfplumber.open(file_path) as pdf:
-        text = ''
         for page in pdf.pages:
-            text += page.extract_text() + '\n'
-    return text
+            text = page.extract_text()
+
+            if text:
+                # Getting operations
+                operations = extract_operations(text)
+                operation_total_value = extract_operation_total_value(text)
+                liquidation_value = extract_liquidation_value(text)
+                exchange_fees_value = extract_exchange_fees_value(text)
+                costs = liquidation_value + exchange_fees_value
+                split_operation_costs(operations, costs, operation_total_value)
+
+
+    #is_unknown_item = is_unknown_value(operations)
+    #if is_unknown_item == False:
+    #    send_to_api(operations)
+    return operations
 
 
 def extract_numeric_value(text, pattern, group = 1):
@@ -97,13 +116,12 @@ def is_unknown_value(operations):
     return False
 
 
-def send_to_api(operations):
+def send_to_api(operations: list[Operation]) -> None:
     if os.getenv("INTEGRATE_TO_API") != "true":
         print("Integration to API is disabled")
         return
     
-    env = os.getenv("ENVIRONMENT")
-    url = os.getenv("API_PRODUCTION_URL") if env == "production" else os.getenv("API_TEST_URL")
+    url = os.getenv("API_BASE_URL", "")
 
     for operation in operations:
         symbol = operation['symbol']
@@ -127,7 +145,3 @@ def send_to_api(operations):
             print("[%s] Request body %s" % (symbol))
             print(json.dumps(data))
             continue
-
-        print("[%s] Success response -  %s" % (symbol, response.json()))
-
-    print("Sent all request to API")      

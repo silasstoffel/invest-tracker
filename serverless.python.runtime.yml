@@ -50,11 +50,13 @@ package:
     - apps/brokerage_extractor/**
 
 functions:
-  hello:
-    description: "Hello"
+  statement-extractor:
+    description: "Extracts investment statements from brokerages"
     handler: apps.brokerage_extractor.handler.hello
-    name: hello-${opt:stage, 'dev'}
-    memorySize: 128
+    name: statement-extractor-${opt:stage, 'dev'}
+    memorySize: 256
     environment:
       ENVIRONMENT: ${opt:stage, 'dev'}
+      INTEGRATE_TO_API: "true"
+      API_BASE_URL: "https://api.invest-tracker.com"
 
