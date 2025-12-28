@@ -13,9 +13,12 @@ custom:
     serverless-offline:
         noPrependStageInUrl: true
     pythonRequirements:
-        usePipenv: true
-        zip: true
-        slim: true
+        dockerizePip: true
+        #zip: true
+        #slim: false
+    apiGatewayId:
+        dev: ymkn0dakbg
+        prod: 5fu6ftdn2m
 
 provider:
   name: aws
@@ -29,18 +32,44 @@ provider:
 
   deploymentBucket:
     # On deployment, serverless prunes artifacts older than this limit (default: 5)
-    maxPreviousDeploymentArtifacts: 3
+    maxPreviousDeploymentArtifacts: 4
 
 # you can add statements to the Lambda function's IAM Role here
-#  iam:
-#    role:
-#      statements:
-#        - Effect: "Allow"
-#          Action:
-#            - "sqs:SendMessage"
-#          Resource:
-#            - Fn::GetAtt: [createInvestmentQueue, Arn]
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - "logs:PutLogEvents"
+            - "logs:CreateLogGroup"
+            - "logs:CreateLogStream"
+          Resource:
+            - arn:aws:logs:${self:provider.region}:${aws:accountId}:log-group:/aws/lambda/*
+
+        - Effect: "Allow"
+          Action:
+            - "s3:GetObject"
+            - "s3:ListBucket"
+            - "s3:HeadObject"
+          Resource:
+            - arn:aws:s3:::invest-track-statements-${opt:stage, 'dev'}/*
   
+resources:
+    Resources:
+
+      createInvestTrackStatementsBucket:
+        Type: AWS::S3::Bucket
+        Properties:
+          BucketName: invest-track-statements-${opt:stage, 'dev'}
+          VersioningConfiguration:
+            Status: Suspended
+          LifecycleConfiguration:
+            Rules:
+              - Status: Enabled
+                ExpirationInDays: 2
+          Tags:
+            - Key: service
+              Value: invest-track-${opt:stage, 'dev'}      
 
 package:
   individually: false
@@ -51,12 +80,19 @@ package:
 
 functions:
   statement-extractor:
-    description: "Extracts investment statements from brokerages"
-    handler: apps.brokerage_extractor.handler.hello
+    description: "Extracts investment statements from brokerage PDFs uploaded to S3"
+    handler: apps.brokerage_extractor.handler.handle
     name: statement-extractor-${opt:stage, 'dev'}
     memorySize: 256
     environment:
       ENVIRONMENT: ${opt:stage, 'dev'}
       INTEGRATE_TO_API: "true"
-      API_BASE_URL: "https://api.invest-tracker.com"
-
+      API_BASE_URL: "https://${self:custom.apiGatewayId.${self:provider.stage, 'dev'}}.execute-api.us-east-1.amazonaws.com/${opt:stage, 'dev'}"
+    events:
+      - s3:
+          bucket: invest-track-statements-${opt:stage, 'dev'}
+          event: s3:ObjectCreated:*
+          rules:
+            - suffix: .pdf
+          existing: true
+          forceDeploy: true
