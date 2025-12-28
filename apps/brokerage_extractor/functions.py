@@ -1,12 +1,12 @@
 import pdfplumber
 import re
-import pandas as pd
 import requests
 import os
 import json
 
-from symbol import search_symbol, search_symbol_type
 from datetime import datetime
+
+from .symbol import search_symbol, search_symbol_type
 from .types import Operation
 
 def extract_operations_from_pdf(file_path: str) -> list[Operation]:
@@ -117,11 +117,12 @@ def is_unknown_value(operations):
 
 
 def send_to_api(operations: list[Operation]) -> None:
-    if os.getenv("INTEGRATE_TO_API") != "true":
+    if os.getenv("INTEGRATE_TO_API", "") != "true":
         print("Integration to API is disabled")
         return
     
-    url = os.getenv("API_BASE_URL", "")
+    base_url = os.getenv("API_BASE_URL", "")
+    url = f"{base_url}/investments/schedule"
 
     for operation in operations:
         symbol = operation['symbol']
@@ -141,7 +142,7 @@ def send_to_api(operations: list[Operation]) -> None:
         response = requests.post(url, json=data, headers={"Content-Type": "application/json"})
 
         if response.status_code != 202:
-            print("[%s] Failure request. Status: %s - Content: %s" % (symbol, response.status_code, response.json()))
+            print("[%s] Failure request. URL: %s Status: %s - Content: %s" % (symbol, url, response.status_code, response.json()))
             print("[%s] Request body %s" % (symbol))
             print(json.dumps(data))
             continue

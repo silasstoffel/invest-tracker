@@ -2,14 +2,13 @@ import logging
 import boto3
 import urllib.parse
 import tempfile
-import os
 
 from .functions import extract_operations_from_pdf, is_unknown_value, send_to_api
 from .types import Operation
 
 s3 = boto3.client("s3")
 
-def handler(event: dict, context:dict) -> None:
+def handle(event: dict, context:dict) -> None:
     logging.info("Hello from Brokerage Extractor!")
 
     record = event["Records"][0]
